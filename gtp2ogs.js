@@ -510,9 +510,9 @@ class Game {
             //this.log("Clock: ", clock);
             this.state.clock = clock;
 
-            if (this.bot) {
-                this.bot.loadClock(state);
-            }
+            /* if (this.bot) {
+            //    this.bot.loadClock(state);
+            } */
         });
         this.socket.on('game/' + game_id + '/phase', (phase) => {
             if (!this.connected) return;
