@@ -6,6 +6,7 @@ process.title = 'gtp2ogs';
 let DEBUG = false;
 let KGSTIME = false;
 let NOCLOCK = false;
+let PERSIST = false;
 
 let spawn = require('child_process').spawn;
 let os = require('os')
@@ -54,6 +55,7 @@ let optimist = require("optimist")
     .describe('json', 'Send and receive GTP commands in a JSON encoded format')
     .describe('kgstime', 'Send time data to bot using kgs-time_settings command')
     .describe('noclock', 'Do not send any clock/time data to the bot')
+    .describe('persist', 'Bot process remains running between moves')
 ;
 let argv = optimist.argv;
 
@@ -83,6 +85,10 @@ if (argv.kgstime) {
 
 if (argv.noclock) {
     NOCLOCK = true;
+}
+
+if (argv.persist) {
+    PERSIST = true;
 }
 
 let bot_command = argv._;
@@ -419,7 +425,7 @@ class Bot {
         }
     } /* }}} */
     genmove(state, cb) { /* {{{ */
-        this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'), 
+        this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'),
             (move) => {
                 move = typeof(move) == "string" ? move.toLowerCase() : null;
                 let resign = move == 'resign';
@@ -444,7 +450,10 @@ class Bot {
         this.log("Killing process ");
         this.proc.kill();
     } /* }}} */
-
+    sendMove(move, width, color){
+        if (DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width));
+        this.command("play " + color + " " + move2gtpvertex(move, width));
+    }
 } /* }}} */
 
 
@@ -461,6 +470,8 @@ class Game {
         this.waiting_on_gamedata_to_make_move = false;
         this.move_number_were_waiting_for = -1;
         this.connected = true;
+        this.bot = null;
+        this.my_color = null;
 
         let check_for_move = () => {
             if (!this.state) {
@@ -486,6 +497,8 @@ class Game {
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.state = gamedata;
             check_for_move();
+
+            this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
         });
         // TODO: I seem to get this event consistantly later than states are loaded. Calling loadClock below ends up being after 
         // genmove is already called, so the bot doesn't have accurate clock info before doing genmove. Unsure how to fix this.
@@ -525,8 +538,17 @@ class Game {
             } catch (e) {
                 console.error(e)
             }
-            if (this.bot) {
-                this.bot.sendMove(decodeMoves(move.move, this.state.width)[0]);
+            // this.bot will always be null if PERSIST is false, but lets check just in case
+            //
+            if (this.bot && PERSIST) {
+                // Since the bot isn't restarting each move, we need to tell it about opponent moves
+                //
+                if (this.move_number_were_waiting_for == move.move_number) {
+                    //if (DEBUG) this.log("Received raw move", JSON.stringify(move) );
+                    //if (DEBUG) this.log("Received decoded move", decodeMoves(move.move, this.state.width)[0] );
+                    //if (DEBUG) this.log("Waiting for move", this.move_number_were_waiting_for);
+                    this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
+                }
             }
             check_for_move();
         });
@@ -536,6 +558,7 @@ class Game {
         }));
     } /* }}} */
     makeMove(move_number) { /* {{{ */
+        if (DEBUG) { this.log("makeMove", move_number); }
         if (!this.state || this.state.moves.length != move_number) {
             this.waiting_on_gamedata_to_make_move = true;
             this.move_number_were_waiting_for = move_number;
@@ -545,7 +568,6 @@ class Game {
             return;
         }
 
-        let bot = new Bot(conn, bot_command);
         ++moves_processing;
 
         let passed = false;
@@ -559,18 +581,25 @@ class Game {
                     'move': ".."
                 }));
                 --moves_processing;
-                bot.kill();
+                this.bot.kill();
             }
         }
 
-        bot.log("Generating move for game ", this.game_id);
-        bot.loadState(this.state, () => {
-            if (DEBUG) {
-                this.log("State loaded");
-            }
-        }, passAndRestart);
+        if (!this.bot) {
+            this.log("Starting new bot process");
+            this.bot = new Bot(conn, bot_command);
 
-        bot.genmove(this.state, (move) => {
+            this.log("State loading for new bot");
+            this.bot.loadState(this.state, () => {
+                if (DEBUG) {
+                    this.log("State loaded for new bot");
+                }
+            }, passAndRestart);
+        }
+
+        this.bot.log("Generating move for game", this.game_id);
+
+        this.bot.genmove(this.state, (move) => {
             --moves_processing;
             if (move.resign) {
                 this.log("Resigning");
@@ -586,7 +615,10 @@ class Game {
                 }));
                 //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
             }
-            bot.kill();
+            if (!PERSIST) {
+                this.bot.kill();
+                this.bot = null;
+            }
         }, passAndRestart);
     } /* }}} */
     auth(obj) { /* {{{ */
@@ -772,10 +804,6 @@ class Connection {
         return obj;
     } /* }}} */
     connectToGame(game_id) { /* {{{ */
-        if (DEBUG) {
-            conn_log("Connecting to game", game_id);
-        }
-
         if (game_id in this.connected_games) {
             clearTimeout(this.connected_game_timeouts[game_id])
         }
@@ -784,8 +812,11 @@ class Connection {
         }, argv.timeout); /* forget about game after --timeout seconds */
 
         if (game_id in this.connected_games) {
+            if (DEBUG) conn_log("Connected to game", game_id, "already");
             return this.connected_games[game_id];
         }
+
+        if (DEBUG) conn_log("Connecting to game", game_id);
         return this.connected_games[game_id] = new Game(this, game_id);;
     }; /* }}} */
     disconnectFromGame(game_id) { /* {{{ */
