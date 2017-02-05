@@ -114,9 +114,11 @@ class Bot {
         let stderr_buffer = "";
         this.proc.stderr.on('data', (data) => {
             stderr_buffer += data.toString();
+
             if (stderr_buffer[stderr_buffer.length-1] != '\n') {
                 return;
             }
+
             let errlines = stderr_buffer.split("\n");
             stderr_buffer = "";
             for (let i=0; i < errlines.length; ++i) {
@@ -125,6 +127,12 @@ class Bot {
                     continue;
                 } else {
                     this.error("stderr: " + errline);
+                    let myPVRe = /visits, score (.*)/;
+                    let myPV = myPVRe.exec(errline);
+                    if (myPV)
+                    {
+                        this.game.sendChat(myPV[1], this.game.state.moves.length);
+                    }
                 }
             }
         });
@@ -441,6 +449,7 @@ class Bot {
         }
     } /* }}} */
     genmove(state, cb) { /* {{{ */
+        this.log("state in genmove: ", JSON.stringify(state, 4, null));
         this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'),
             (move) => {
                 move = typeof(move) == "string" ? move.toLowerCase() : null;
