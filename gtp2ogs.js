@@ -131,7 +131,7 @@ class Bot {
                     let myPV = myPVRe.exec(errline);
                     if (myPV)
                     {
-                        this.game.sendChat(myPV[1], this.game.state.moves.length);
+                        this.game.sendChat(myPV[1], this.game.state.moves.length, "malkovich");
                     }
                 }
             }
