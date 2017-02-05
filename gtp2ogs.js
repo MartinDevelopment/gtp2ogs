@@ -449,7 +449,7 @@ class Bot {
         }
     } /* }}} */
     genmove(state, cb) { /* {{{ */
-        this.log("state in genmove: ", JSON.stringify(state, 4, null));
+        //this.log("state in genmove: ", JSON.stringify(state, 4, null));
         this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'),
             (move) => {
                 move = typeof(move) == "string" ? move.toLowerCase() : null;
