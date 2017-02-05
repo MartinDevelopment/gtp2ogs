@@ -100,8 +100,9 @@ process.title = 'gtp2ogs ' + bot_command.join(' ');
 /** Bot **/
 /*********/
 class Bot {
-    constructor(conn, cmd) {{{
+    constructor(conn, game, cmd) {{{
         this.conn = conn;
+        this.game = game;
         this.proc = spawn(cmd[0], cmd.slice(1));
         this.commands_sent = 0;
         this.command_callbacks = [];
@@ -110,9 +111,24 @@ class Bot {
             this.log("Starting ", cmd.join(' '));
         }
 
+        let stderr_buffer = "";
         this.proc.stderr.on('data', (data) => {
-            this.error("stderr: " + data);
+            stderr_buffer += data.toString();
+            if (stderr_buffer[stderr_buffer.length-1] != '\n') {
+                return;
+            }
+            let errlines = stderr_buffer.split("\n");
+            stderr_buffer = "";
+            for (let i=0; i < errlines.length; ++i) {
+                let errline = errlines[i];
+                if (errline.trim() == "") {
+                    continue;
+                } else {
+                    this.error("stderr: " + errline);
+                }
+            }
         });
+
         let stdout_buffer = "";
         this.proc.stdout.on('data', (data) => {
             stdout_buffer += data.toString();
@@ -449,6 +465,10 @@ class Bot {
     kill() { /* {{{ */
         this.log("Killing process ");
         this.proc.kill();
+        if (this.stderr != "")
+        {
+            this.error("stderr: " + this.stderr);
+        }
     } /* }}} */
     sendMove(move, width, color){
         if (DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width));
@@ -587,7 +607,7 @@ class Game {
 
         if (!this.bot) {
             this.log("Starting new bot process");
-            this.bot = new Bot(conn, bot_command);
+            this.bot = new Bot(conn, this, bot_command);
 
             this.log("State loading for new bot");
             this.bot.loadState(this.state, () => {
