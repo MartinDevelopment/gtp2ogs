@@ -813,6 +813,15 @@ class Connection {
             } */
             if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
                 this.processMove(gamedata);
+
+                if (this.connected_game_timeouts[gamedata.id]) {
+                    clearTimeout(this.connected_game_timeouts[gamedata.id])
+                }
+                if (DEBUG) conn_log("Setting timeout for", gamedata.id);
+                this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
+                    if (DEBUG) conn_log("TimeOut activated to disconnect from", gamedata.id);
+                    this.disconnectFromGame(gamedata.id);
+                }, argv.timeout); /* forget about game after --timeout seconds */
             }
             // When a game ends, we don't get a "finished" active_game.phase. Probably since the game is no
             // longer active.
@@ -825,6 +834,7 @@ class Connection {
                 }
                 if (DEBUG) conn_log("Setting timeout for", gamedata.id);
                 this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
+                    if (DEBUG) conn_log("TimeOut activated to disconnect from", gamedata.id);
                     this.disconnectFromGame(gamedata.id);
                 }, argv.timeout); /* forget about game after --timeout seconds */
             }
