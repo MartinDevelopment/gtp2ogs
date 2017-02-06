@@ -127,11 +127,24 @@ class Bot {
                     continue;
                 } else {
                     this.error("stderr: " + errline);
-                    let myPVRe = /visits, score (.*)/;
+                    let myPVRe = /visits, score (.*) PV: (.*)/;
                     let myPV = myPVRe.exec(errline);
                     if (myPV)
                     {
-                        this.game.sendChat(myPV[1], this.game.state.moves.length, "malkovich");
+                        let moves = "";
+                        let rawmoves = myPV[2].trim().split(" ");
+                        for (let i=0; i < rawmoves.length; ++i) {
+                            let x = rawmoves[i].slice(0,1).toLowerCase();
+                            let y = num2char(this.game.state.width - rawmoves[i].slice(1));
+                            moves += x + y;
+                        }
+                        let body = { 
+                            "type": "analysis",
+                            "name": myPV[1],
+                            "from": this.game.state.moves.length,
+                            "moves": moves
+                        }
+                        if (moves) this.game.sendChat(body, this.game.state.moves.length+1, "malkovich");
                     }
                 }
             }
@@ -673,13 +686,14 @@ class Game {
 
         console.log.apply(null, arr);
     } /* }}} */
-    sendChat(str, move_number, type = "discussion") {
+    sendChat(body, move_number, type = "discussion") {
         if (!this.connected) return;
 
+        //this.log("sendChat body:", JSON.stringify(body, 0, null));
         this.socket.emit('game/chat', this.auth({
             'game_id': this.state.game_id,
             'player_id': this.conn.user_id,
-            'body': str,
+            'body': body,
             'move_number': move_number,
             'type': type,
             'username': argv.username
