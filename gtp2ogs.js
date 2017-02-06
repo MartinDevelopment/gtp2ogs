@@ -138,7 +138,7 @@ class Bot {
                             let y = num2char(this.game.state.width - rawmoves[i].slice(1));
                             moves += x + y;
                         }
-                        let body = { 
+                        let body = {
                             "type": "analysis",
                             "name": myPV[1],
                             "from": this.game.state.moves.length,
