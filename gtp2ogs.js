@@ -474,7 +474,7 @@ class Bot {
     kill() { /* {{{ */
         this.log("Killing process ");
         this.proc.kill();
-        if (this.stderr != "")
+        if (this.stderr && this.stderr != "")
         {
             this.error("stderr: " + this.stderr);
         }
