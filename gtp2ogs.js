@@ -133,7 +133,7 @@ class Bot {
                     {
                         let moves = "";
                         let rawmoves = myPV[2].trim().split(" ");
-                        for (let i=0; i < rawmoves.length; ++i) {
+                        for (let i=0; i < rawmoves.length; i++) {
                             let x = rawmoves[i].slice(0,1).toLowerCase();
                             let y = num2char(this.game.state.width - rawmoves[i].slice(1));
                             moves += x + y;
@@ -532,6 +532,7 @@ class Game {
                 if (DEBUG) this.log("Killing bot process");
                 this.bot.kill();
                 this.bot = null;
+                //this.disconnect();
             }
         }
 
@@ -671,7 +672,7 @@ class Game {
         return this.conn.auth(obj);
     }; /* }}} */
     disconnect() { /* {{{ */
-        this.log("Disconnecting from game #", this.game_id);
+        this.log("Game #", this.game_id, " called disconnect()");
 
         this.connected = false;
         this.socket.emit('game/disconnect', this.auth({
@@ -780,28 +781,11 @@ class Connection {
         });
         socket.on('disconnect', () => {
             this.connected = false;
-            conn_log("Disconnected from server");
+            conn_log("disconnect received from server");
             for (let game_id in this.connected_games) {
                 this.disconnectFromGame(game_id);
             }
         });
-
-        //socket.on('game/' + game_id + '/clock', (clock) => {
-        /* 
-        socket.on('clock', (clock) => {
-            this.log("clock for " + clock.game_id);
-            this.log("current clock: " + this.connected_games[clock.game_id].clock);
-            if (this.connected_games[clock.game_id]) {
-                this.connected_games[clock.game_id].clock = clock;
-            }
-            this.log("new clock: " + this.connected_games[clock.game_id].clock);
-
-            // this.log("Clock: ", clock);
-            if (this.bot) {
-                this.bot.loadClock(connected_games[clock.game_id].state);
-            }
-        }); 
-        */
 
         socket.on('notification', (notification) => {
             if (this['on_' + notification.type]) {
@@ -829,9 +813,10 @@ class Connection {
                 this.processMove(gamedata);
 
                 if (this.connected_game_timeouts[gamedata.id]) {
-                    clearTimeout(this.connected_game_timeouts[gamedata.id])
+                    clearTimeout(this.connected_game_timeouts[gamedata.id]);
+                    if (DEBUG) conn_log("clearTimeout", gamedata.id);
                 }
-                if (DEBUG) conn_log("Setting timeout for", gamedata.id);
+                if (DEBUG) conn_log("setTimeout", gamedata.id);
                 this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
                     if (DEBUG) conn_log("TimeOut activated to disconnect from", gamedata.id);
                     this.disconnectFromGame(gamedata.id);
@@ -841,12 +826,14 @@ class Connection {
             // longer active.
             //
             if (gamedata.phase == "finished") {
+                if (DEBUG) conn_log(gamedata.id, "gamedata.phase == finished")
                 this.disconnectFromGame(gamedata.id);
             } else {
                 if (this.connected_game_timeouts[gamedata.id]) {
-                    clearTimeout(this.connected_game_timeouts[gamedata.id])
+                    clearTimeout(this.connected_game_timeouts[gamedata.id]);
+                    if (DEBUG) conn_log("clearTimeout", gamedata.id);
                 }
-                if (DEBUG) conn_log("Setting timeout for", gamedata.id);
+                if (DEBUG) conn_log("setTimeout", gamedata.id);
                 this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
                     if (DEBUG) conn_log("TimeOut activated to disconnect from", gamedata.id);
                     this.disconnectFromGame(gamedata.id);
@@ -865,7 +852,7 @@ class Connection {
     } /* }}} */
     connectToGame(game_id) { /* {{{ */
         if (game_id in this.connected_games) {
-            clearTimeout(this.connected_game_timeouts[game_id])
+            clearTimeout(this.connected_game_timeouts[game_id]);
         }
         this.connected_game_timeouts[game_id] = setTimeout(() => {
             this.disconnectFromGame(game_id);
@@ -877,14 +864,15 @@ class Connection {
         }
 
         if (DEBUG) conn_log("Connecting to game", game_id);
-        return this.connected_games[game_id] = new Game(this, game_id);;
+        return this.connected_games[game_id] = new Game(this, game_id);
     }; /* }}} */
     disconnectFromGame(game_id) { /* {{{ */
         if (DEBUG) {
-            conn_log("Disconnected from game", game_id);
+            conn_log("disconnectFromGame", game_id);
         }
         if (game_id in this.connected_games) {
-            clearTimeout(this.connected_game_timeouts[game_id])
+            if (DEBUG) conn_log("clearTimeout", game_id);
+            clearTimeout(this.connected_game_timeouts[game_id]);
             this.connected_games[game_id].disconnect();
         }
 
