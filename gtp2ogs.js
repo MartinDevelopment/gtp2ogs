@@ -127,7 +127,7 @@ class Bot {
                     continue;
                 } else {
                     this.error("stderr: " + errline);
-                    let myPVRe = /visits, score (.*) PV: (.*)/;
+                    let myPVRe = /visits, score (.*) \(from.* PV: (.*)/;
                     let myPV = myPVRe.exec(errline);
                     if (myPV)
                     {
@@ -579,6 +579,7 @@ class Game {
         });
         this.socket.on('game/' + game_id + '/move', (move) => {
             if (!this.connected) return;
+            if (DEBUG) this.log("game/" + game_id + "/move:", move);
             try {
                 this.state.moves.push(move.move);
             } catch (e) {
@@ -771,6 +772,7 @@ class Connection {
              * notifications that got lost in the shuffle... and maybe someday
              * we'll get it figured out how this happens in the first place. */
             if (moves_processing == 0) {
+                conn_log("setInterval moves_processing==0");
                 socket.emit('notification/connect', this.auth({}), (x) => {
                     conn_log(x);
                 })
@@ -798,9 +800,8 @@ class Connection {
         });
 
         socket.on('active_game', (gamedata) => {
-            if (DEBUG) {
-                //conn_log("active_game message:", JSON.stringify(gamedata, null, 4));
-            }
+            if (DEBUG) conn_log("active_game:", JSON.stringify(gamedata, null, 4));
+
             // OGS auto scores bot games now, no removal processing is needed by the bot.
             //
             /* if (gamedata.phase == 'stone removal'
