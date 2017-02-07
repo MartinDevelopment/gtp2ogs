@@ -137,7 +137,7 @@ class Bot {
                         {
                             for (let i=0; i < rawmoves.length; i++) {
                                 let x = rawmoves[i].slice(0,1).toLowerCase();
-                                let y = num2char(this.game.state.width - rawmoves[i].slice(1));
+                                let y = num2gtpchar(this.game.state.width - rawmoves[i].slice(1));
                                 moves += x + y;
                             }
                             let body = {
