@@ -133,18 +133,21 @@ class Bot {
                     {
                         let moves = "";
                         let rawmoves = myPV[2].trim().split(" ");
-                        for (let i=0; i < rawmoves.length; i++) {
-                            let x = rawmoves[i].slice(0,1).toLowerCase();
-                            let y = num2char(this.game.state.width - rawmoves[i].slice(1));
-                            moves += x + y;
+                        if (rawmoves.length > 1)
+                        {
+                            for (let i=0; i < rawmoves.length; i++) {
+                                let x = rawmoves[i].slice(0,1).toLowerCase();
+                                let y = num2char(this.game.state.width - rawmoves[i].slice(1));
+                                moves += x + y;
+                            }
+                            let body = {
+                                "type": "analysis",
+                                "name": ("from " + this.game.state.moves.length + " " + myPV[1] + " " + moves),
+                                "from": this.game.state.moves.length,
+                                "moves": moves
+                            }
+                            if (moves) this.game.sendChat(body, this.game.state.moves.length+1, "malkovich");
                         }
-                        let body = {
-                            "type": "analysis",
-                            "name": myPV[1],
-                            "from": this.game.state.moves.length,
-                            "moves": moves
-                        }
-                        if (moves) this.game.sendChat(body, this.game.state.moves.length+1, "malkovich");
                     }
                 }
             }
@@ -799,7 +802,7 @@ class Connection {
 
         socket.on('active_game', (gamedata) => {
             if (DEBUG) {
-                //conn_log("active_game message:", JSON.stringify(gamedata, null, 4));
+                conn_log("active_game:", JSON.stringify(gamedata, null, 4));
             }
             // OGS auto scores bot games now, no removal processing is needed by the bot.
             //
