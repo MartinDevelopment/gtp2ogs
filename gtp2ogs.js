@@ -142,7 +142,8 @@ class Bot {
                             }
                             let body = {
                                 "type": "analysis",
-                                "name": ("from " + this.game.state.moves.length + " " + myPV[1] + " " + moves),
+                                //"name": ("from " + this.game.state.moves.length + " " + myPV[1] + " " + moves),
+                                "name": myPV[1],
                                 "from": this.game.state.moves.length,
                                 "moves": moves
                             }
@@ -527,7 +528,7 @@ class Game {
                 if (this.waiting_on_gamedata_to_make_move && this.state.moves.length == this.move_number_were_waiting_for) {
                     this.makeMove(this.move_number_were_waiting_for);
                     this.waiting_on_gamedata_to_make_move = false;
-                    this.move_number_were_waiting_for = -1;
+                    this.move_number_were_waiting_for += 2;
                 }
             }
             else if (this.state.phase == 'finished') {
@@ -595,9 +596,11 @@ class Game {
                 //
                 if (this.move_number_were_waiting_for == move.move_number) {
                     //if (DEBUG) this.log("Received raw move", JSON.stringify(move) );
-                    //if (DEBUG) this.log("Received decoded move", decodeMoves(move.move, this.state.width)[0] );
+                    //if (DEBUG) this.log("Received decoded move", decodeMoves(move.move, this.state.width)[0]);
                     //if (DEBUG) this.log("Waiting for move", this.move_number_were_waiting_for);
                     this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
+                } else {
+                    if (DEBUG) this.log("Ignoring move", move.move_number, "waiting for move", this.move_number_were_waiting_for);
                 }
             }
             check_for_move();
@@ -608,7 +611,7 @@ class Game {
         }));
     } /* }}} */
     makeMove(move_number) { /* {{{ */
-        if (DEBUG) { this.log("makeMove", move_number); }
+        if (DEBUG && this.state) { this.log("makeMove", move_number, "is", this.state.moves.length, "!=", move_number, "?"); }
         if (!this.state || this.state.moves.length != move_number) {
             this.waiting_on_gamedata_to_make_move = true;
             this.move_number_were_waiting_for = move_number;
@@ -775,7 +778,7 @@ class Connection {
              * notifications that got lost in the shuffle... and maybe someday
              * we'll get it figured out how this happens in the first place. */
             if (moves_processing == 0) {
-                conn_log("setInterval moves_processing==0");
+                // if (DEBUG) conn_log("setInterval moves_processing==0");
                 socket.emit('notification/connect', this.auth({}), (x) => {
                     conn_log(x);
                 })
