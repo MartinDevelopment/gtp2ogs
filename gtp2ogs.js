@@ -135,16 +135,19 @@ class Bot {
                         let rawmoves = myPV[2].trim().split(" ");
                         if (rawmoves.length > 1)
                         {
+                            let mymove = "";
                             for (let i=0; i < rawmoves.length; i++) {
                                 let x = num2char(gtpchar2num(rawmoves[i].slice(0,1).toLowerCase()));
                                 let y = num2char(this.game.state.width - rawmoves[i].slice(1));
                                 moves += x + y;
+                                if (i==0) mymove = x + y;
                             }
                             let body = {
                                 "type": "analysis",
                                 //"name": ("from " + this.game.state.moves.length + " " + myPV[1] + " " + moves),
                                 "name": myPV[1],
                                 "from": this.game.state.moves.length,
+                                "marks": { "circle": mymove },
                                 "moves": moves
                             }
                             if (moves) this.game.sendChat(body, this.game.state.moves.length+1, "malkovich");
@@ -205,7 +208,7 @@ class Bot {
     }}}
 
     log(str) { /* {{{ */
-        let arr = ["[" + this.proc.pid + "]"];
+        let arr = ["[" + this.proc.pid + "] " + timeStamp()];
         for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
         }
@@ -213,7 +216,7 @@ class Bot {
         console.log.apply(null, arr);
     } /* }}} */
     error(str) { /* {{{ */
-        let arr = ["[" + this.proc.pid + "]"];
+        let arr = ["[" + this.proc.pid + "] " + timeStamp()];
         for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
         }
@@ -221,7 +224,7 @@ class Bot {
         console.error.apply(null, arr);
     } /* }}} */
     verbose(str) { /* {{{ */
-        let arr = ["[" + this.proc.pid + "]"];
+        let arr = ["[" + this.proc.pid + "] " + timeStamp()];
         for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
         }
@@ -687,7 +690,7 @@ class Game {
         }));
     }; /* }}} */
     log(str) { /* {{{ */
-        let arr = ["[Game " + this.game_id + "]"];
+        let arr = ["[Game " + this.game_id + "] " + timeStamp()];
         for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
         }
@@ -806,7 +809,7 @@ class Connection {
         });
 
         socket.on('active_game', (gamedata) => {
-            if (DEBUG) conn_log("active_game:", JSON.stringify(gamedata, null, 4));
+            if (DEBUG) conn_log("active_game:", JSON.stringify(gamedata));
 
             // OGS auto scores bot games now, no removal processing is needed by the bot.
             //
@@ -1166,7 +1169,7 @@ function num2gtpchar(num) { /* {{{ */
 } /* }}} */
 
 function conn_log() { /* {{{ */
-    let arr = ["# "];
+    let arr = [(timeStamp() + " # ")];
     let errlog = false;
     for (let i=0; i < arguments.length; ++i) {
         let param = arguments[i];
@@ -1185,5 +1188,41 @@ function conn_log() { /* {{{ */
         console.log.apply(null, arr);
     }
 } /* }}} */
+
+/**
+ * Return a timestamp with the format "m/d/yy h:MM:ss TT"
+ * @type {Date}
+ */
+
+function timeStamp() {
+    // Create a date object with the current time
+    var now = new Date();
+
+    // Create an array with the current month, day and time
+    var date = [ now.getMonth() + 1, now.getDate(), now.getFullYear() ];
+
+    // Create an array with the current hour, minute and second
+    var time = [ now.getHours(), now.getMinutes(), now.getSeconds() ];
+
+    // Determine AM or PM suffix based on the hour
+    var suffix = ( time[0] < 12 ) ? "AM" : "PM";
+
+    // Convert hour from military time
+    time[0] = ( time[0] < 12 ) ? time[0] : time[0] - 12;
+
+    // If hour is 0, set it to 12
+    time[0] = time[0] || 12;
+
+    // If seconds and minutes are less than 10, add a zero
+    for ( var i = 1; i < 3; i++ ) {
+        if ( time[i] < 10 ) {
+        time[i] = "0" + time[i];
+        }
+    }
+
+    // Return the formatted string
+    //return date.join("/") + " " + time.join(":") + " " + suffix;
+    return time.join(":");
+}
 
 let conn = new Connection();
