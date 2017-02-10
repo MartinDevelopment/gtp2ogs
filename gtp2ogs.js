@@ -103,7 +103,9 @@ class Bot {
     constructor(conn, game, cmd) {{{
         this.conn = conn;
         this.game = game;
-        this.proc = spawn(cmd[0], cmd.slice(1));
+	let leelaargs = cmd.slice(1);
+        leelaargs.push("--logfile=" + this.game.game_id + ".log");
+        this.proc = spawn(cmd[0], leelaargs);
         this.commands_sent = 0;
         this.command_callbacks = [];
 
