@@ -154,9 +154,9 @@ class Bot {
                             }
                             if (moves) {
                                 this.game.sendChat(body, this.game.state.moves.length+1, "malkovich");
-                                this.influence( (influence) => {
+                                /* this.influence( (influence) => {
                                     this.log("Callback influence: " + JSON.stringify(influence, null, 4));
-                                });
+                                }); */
                             }
                         }
                     } else {
@@ -482,16 +482,16 @@ class Bot {
             if (eb) eb(e);
         }
     } /* }}} */
-    influence(cb) {
+    /* influence(cb) {
         this.command("influence", 
             (influence) => {
                 this.log("call function got:" + JSON.stringify(influence, null, 4));
                 cb({'width': 9, 'height': 9, 'map': influence});
             },
             null,
-            true /* final command */
+            true
         )
-    }
+    } */
     genmove(state, cb) { /* {{{ */
         //this.log("state in genmove: ", JSON.stringify(state, 4, null));
         this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'),
