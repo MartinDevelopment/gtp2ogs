@@ -133,7 +133,6 @@ class Bot {
                     let myPV = myPVRe.exec(errline);
                     if (myPV)
                     {
-this.error("Regexp hit on: " + errline);
                         let moves = "";
                         let rawmoves = myPV[2].trim().split(" ");
                         if (rawmoves.length > 1)
