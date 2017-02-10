@@ -103,11 +103,12 @@ class Bot {
     constructor(conn, game, cmd) {{{
         this.conn = conn;
         this.game = game;
-	let leelaargs = cmd.slice(1);
+        let leelaargs = cmd.slice(1);
         leelaargs.push("--logfile=" + this.game.game_id + ".log");
         this.proc = spawn(cmd[0], leelaargs);
         this.commands_sent = 0;
         this.command_callbacks = [];
+        this.SCORE = "";
 
         if (DEBUG) {
             this.log("Starting ", cmd.join(' '));
@@ -146,12 +147,19 @@ class Bot {
                             }
                             let body = {
                                 "type": "analysis",
-                                "name": myPV[1],
+                                "name": myPV[1] + " " + this.SCORE,
                                 "from": this.game.state.moves.length,
                                 "marks": { "circle": mymove },
                                 "moves": moves
                             }
                             if (moves) this.game.sendChat(body, this.game.state.moves.length+1, "malkovich");
+                        }
+                    } else {
+                        let mySCORERe = /MC winrate.* score=(.*)/;
+                        let mySCORE = mySCORERe.exec(errline);
+                        if (mySCORE)
+                        {
+                            this.SCORE = mySCORE[1];
                         }
                     }
                 }
