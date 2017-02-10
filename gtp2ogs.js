@@ -890,10 +890,13 @@ class Connection {
             if (DEBUG) conn_log("clearTimeout", game_id);
             clearTimeout(this.connected_game_timeouts[game_id]);
             this.connected_games[game_id].disconnect();
+            if (this.connected_games[game_id].bot) {
+                this.connected_games[game_id].bot.kill();
+                this.connected_games[game_id].bot = null;
+            }
+            delete this.connected_games[game_id];
+            delete this.connected_game_timeouts[game_id];
         }
-
-        delete this.connected_games[game_id];
-        delete this.connected_game_timeouts[game_id];
     }; /* }}} */
     deleteNotification(notification) { /* {{{ */
         this.socket.emit('notification/delete', this.auth({notification_id: notification.id}), (x) => {
