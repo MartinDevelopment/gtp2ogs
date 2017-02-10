@@ -133,6 +133,7 @@ class Bot {
                     let myPV = myPVRe.exec(errline);
                     if (myPV)
                     {
+this.error("Regexp hit on: " + errline);
                         let moves = "";
                         let rawmoves = myPV[2].trim().split(" ");
                         if (rawmoves.length > 1)
@@ -146,7 +147,6 @@ class Bot {
                             }
                             let body = {
                                 "type": "analysis",
-                                //"name": ("from " + this.game.state.moves.length + " " + myPV[1] + " " + moves),
                                 "name": myPV[1],
                                 "from": this.game.state.moves.length,
                                 "marks": { "circle": mymove },
@@ -886,17 +886,21 @@ class Connection {
         if (DEBUG) {
             conn_log("disconnectFromGame", game_id);
         }
-        if (game_id in this.connected_games) {
-            if (DEBUG) conn_log("clearTimeout", game_id);
+        if (game_id in this.connect_game_timeouts)
+        {
+            if (DEBUG) conn_log("clearTimeout in disconnectFromGame", game_id);
             clearTimeout(this.connected_game_timeouts[game_id]);
+        }
+        if (game_id in this.connected_games) {
             this.connected_games[game_id].disconnect();
             if (this.connected_games[game_id].bot) {
                 this.connected_games[game_id].bot.kill();
                 this.connected_games[game_id].bot = null;
             }
-            delete this.connected_games[game_id];
-            delete this.connected_game_timeouts[game_id];
         }
+
+        delete this.connected_games[game_id];
+        delete this.connected_game_timeouts[game_id];
     }; /* }}} */
     deleteNotification(notification) { /* {{{ */
         this.socket.emit('notification/delete', this.auth({notification_id: notification.id}), (x) => {
