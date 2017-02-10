@@ -896,6 +896,11 @@ class Connection {
             if (DEBUG) conn_log("clearTimeout in disconnectFromGame", game_id);
             clearTimeout(this.connected_game_timeouts[game_id]);
         }
+        if (game_id in this.connected_game_timeouts)
+        {
+            if (DEBUG) conn_log("clearTimeout in disconnectFromGame", game_id);
+            clearTimeout(this.connected_game_timeouts[game_id]);
+        }
         if (game_id in this.connected_games) {
             this.connected_games[game_id].disconnect();
             if (this.connected_games[game_id].bot) {
