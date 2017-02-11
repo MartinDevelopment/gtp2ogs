@@ -160,12 +160,12 @@ class Bot {
                             }
                         }
                     } else {
-                        let mySCORERe = /MC winrate.* score=(.*)/;
+                        /*let mySCORERe = /MC winrate.* score=(.*)/;
                         let mySCORE = mySCORERe.exec(errline);
                         if (mySCORE)
                         {
                             this.SCORE = mySCORE[1];
-                        }
+                        }*/
                     }
                 }
             }
@@ -492,6 +492,16 @@ class Bot {
             true
         )
     } */
+    final_score(cb) {
+        this.command("final_score", (score) => {
+            //score = typeof(score) == "string" ? score.toUpperCase() : null;
+            //this.log("Final score is", score);
+            cb({'score': score});
+        },
+        null,
+        true
+        )
+    }
     genmove(state, cb) { /* {{{ */
         //this.log("state in genmove: ", JSON.stringify(state, 4, null));
         this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'),
@@ -694,6 +704,10 @@ class Game {
                     'game_id': this.state.game_id,
                     'move': encodeMove(move)
                 }));
+                this.bot.final_score( (score) => {
+                    //this.log("After Chat, score is" + JSON.stringify(score));
+                    this.bot.SCORE = score.score;
+                });
                 //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
             }
             if (!PERSIST) {
