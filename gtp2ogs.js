@@ -47,8 +47,8 @@ let optimist = require("optimist")
     .default('host', 'online-go.com')
     .describe('port', 'OGS Port to connect to')
     .default('port', 443)
-    .describe('timeout', 'Disconnect from a game after this many seconds')
-    .default('timeout', 10*60)
+    .describe('timeout', 'Disconnect from a game after this many seconds (if set)')
+    .default('timeout', 0)
     .describe('insecure', "Don't use ssl to connect to the ggs/rest servers [false]")
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
@@ -502,6 +502,8 @@ class Bot {
         true
         )
     }
+    // TODO: We may want to have a timeout here, in case bot crashes. Set it before this.command, clear it in the callback?
+    //
     genmove(state, cb) { /* {{{ */
         //this.log("state in genmove: ", JSON.stringify(state, 4, null));
         this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'),
@@ -831,10 +833,13 @@ class Connection {
         socket.on('disconnect', () => {
             this.connected = false;
             conn_log("disconnect received from server");
-            for (let game_id in this.connected_game_timeouts)
+            if (argv.timeout)
             {
-                if (DEBUG) conn_log("clearTimeout because disconnect from server", game_id);
-                clearTimeout(this.connected_game_timeouts[game_id]);
+                for (let game_id in this.connected_game_timeouts)
+                {
+                    if (DEBUG) conn_log("clearTimeout because disconnect from server", game_id);
+                    clearTimeout(this.connected_game_timeouts[game_id]);
+                }
             }
             for (let game_id in this.connected_games) {
                 this.disconnectFromGame(game_id);
@@ -865,15 +870,17 @@ class Connection {
             if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
                 this.processMove(gamedata);
 
-                if (this.connected_game_timeouts[gamedata.id]) {
-                    clearTimeout(this.connected_game_timeouts[gamedata.id]);
-                    if (DEBUG) conn_log("clearTimeout", gamedata.id);
+                if (argv.timeout)
+                {
+                    if (this.connected_game_timeouts[gamedata.id]) {
+                        clearTimeout(this.connected_game_timeouts[gamedata.id])
+                    }
+                    if (DEBUG) conn_log("Setting timeout for", gamedata.id);
+                    this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
+                        if (DEBUG) conn_log("TimeOut activated to disconnect from", gamedata.id);
+                        this.disconnectFromGame(gamedata.id);
+                    }, argv.timeout); /* forget about game after --timeout seconds */
                 }
-                if (DEBUG) conn_log("setTimeout", gamedata.id);
-                this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
-                    if (DEBUG) conn_log("TimeOut activated to disconnect from inside play event", gamedata.id);
-                    this.disconnectFromGame(gamedata.id);
-                }, argv.timeout); /* forget about game after --timeout seconds */
             }
             // When a game ends, we don't get a "finished" active_game.phase. Probably since the game is no
             // longer active.
@@ -882,15 +889,16 @@ class Connection {
                 if (DEBUG) conn_log(gamedata.id, "gamedata.phase == finished")
                 this.disconnectFromGame(gamedata.id);
             } else {
-                if (this.connected_game_timeouts[gamedata.id]) {
-                    clearTimeout(this.connected_game_timeouts[gamedata.id]);
-                    if (DEBUG) conn_log("clearTimeout", gamedata.id);
+                if (argv.timeout)
+                {
+                    if (this.connected_game_timeouts[gamedata.id]) {
+                        clearTimeout(this.connected_game_timeouts[gamedata.id])
+                    }
+                    conn_log("Setting timeout for", gamedata.id);
+                    this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
+                        this.disconnectFromGame(gamedata.id);
+                    }, argv.timeout); /* forget about game after --timeout seconds */
                 }
-                if (DEBUG) conn_log("setTimeout", gamedata.id);
-                this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
-                    if (DEBUG) conn_log("TimeOut activated to disconnect from inside !finished", gamedata.id);
-                    this.disconnectFromGame(gamedata.id);
-                }, argv.timeout); /* forget about game after --timeout seconds */
             }
         });
     }}}
@@ -904,16 +912,19 @@ class Connection {
         return obj;
     } /* }}} */
     connectToGame(game_id) { /* {{{ */
-        //if (game_id in this.connected_games) {
-        if (this.connected_game_timeouts[game_id])
-        {
-            if (DEBUG) conn_log("clearTimeout", game_id);
-            clearTimeout(this.connected_game_timeouts[game_id]);
+        if (DEBUG) {
+            conn_log("Connecting to game", game_id);
         }
-        this.connected_game_timeouts[game_id] = setTimeout(() => {
-            if (DEBUG) conn_log("TimeOut activated to disconnect from inside connectToGame", game_id);
-            this.disconnectFromGame(game_id);
-        }, argv.timeout); /* forget about game after --timeout seconds */
+
+        if (argv.timeout)
+        {
+            if (game_id in this.connected_games) {
+                clearTimeout(this.connected_game_timeouts[game_id])
+            }
+            this.connected_game_timeouts[game_id] = setTimeout(() => {
+                this.disconnectFromGame(game_id);
+            }, argv.timeout); /* forget about game after --timeout seconds */
+        }
 
         if (game_id in this.connected_games) {
             if (DEBUG) conn_log("Connected to game", game_id, "already");
@@ -932,10 +943,13 @@ class Connection {
             if (DEBUG) conn_log("clearTimeout in disconnectFromGame", game_id);
             clearTimeout(this.connected_game_timeouts[game_id]);
         }
-        if (game_id in this.connected_game_timeouts)
+        if (argv.timeout)
         {
-            if (DEBUG) conn_log("clearTimeout in disconnectFromGame", game_id);
-            clearTimeout(this.connected_game_timeouts[game_id]);
+            if (game_id in this.connected_game_timeouts)
+            {
+                if (DEBUG) conn_log("clearTimeout in disconnectFromGame", game_id);
+                clearTimeout(this.connected_game_timeouts[game_id]);
+            }
         }
         if (game_id in this.connected_games) {
             this.connected_games[game_id].disconnect();
@@ -946,7 +960,7 @@ class Connection {
         }
 
         delete this.connected_games[game_id];
-        delete this.connected_game_timeouts[game_id];
+        if (argv.timeout) delete this.connected_game_timeouts[game_id];
     }; /* }}} */
     deleteNotification(notification) { /* {{{ */
         this.socket.emit('notification/delete', this.auth({notification_id: notification.id}), (x) => {
