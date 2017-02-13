@@ -147,7 +147,7 @@ class Bot {
                             }
                             let body = {
                                 "type": "analysis",
-                                "name": myPV[1] + " " + this.SCORE,
+                                "name": myPV[1], // + " " + this.SCORE,
                                 "from": this.game.state.moves.length,
                                 "marks": { "circle": mymove },
                                 "moves": moves
@@ -573,7 +573,7 @@ class Game {
             else if (this.state.phase == 'finished') {
                 this.log("Game is finished");
                 if (DEBUG) this.log("Killing bot process");
-                this.bot.kill();
+                if (this.bot) this.bot.kill();
                 this.bot = null;
                 //this.disconnect();
             }
