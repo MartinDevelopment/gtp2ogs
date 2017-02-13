@@ -706,7 +706,7 @@ class Game {
                     'game_id': this.state.game_id,
                     'move': encodeMove(move)
                 }));
-                this.bot.final_score( (score) => {
+                if (this.bot) this.bot.final_score( (score) => {
                     //this.log("After Chat, score is" + JSON.stringify(score));
                     this.bot.SCORE = score.score;
                 });
