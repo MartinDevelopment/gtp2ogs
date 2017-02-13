@@ -708,7 +708,7 @@ class Game {
                 }));
                 if (this.bot) this.bot.final_score( (score) => {
                     //this.log("After Chat, score is" + JSON.stringify(score));
-                    this.bot.SCORE = score.score;
+                    if (this.bot && score) this.bot.SCORE = score.score;
                 });
                 //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
             }
