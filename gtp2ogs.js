@@ -594,7 +594,7 @@ class Game {
         //
         this.socket.on('game/' + game_id + '/clock', (clock) => {
             if (!this.connected) return;
-            this.log("clock")
+            if (DEBUG) this.log("clock")
 
             //this.log("Clock: ", clock);
             this.state.clock = clock;
@@ -987,6 +987,12 @@ class Connection {
 
         if (notification.width != notification.height) {
             conn_log("board was not square, rejecting challenge");
+            reject = true;
+        }
+
+        if (notification.user.ranking < 15) {
+            //conn_log(JSON.stringify(notification, null, 4));
+            conn_log(notification.user.username + " ranking too low: " + notification.user.ranking);
             reject = true;
         }
 
