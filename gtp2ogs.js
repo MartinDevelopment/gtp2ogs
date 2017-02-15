@@ -679,7 +679,6 @@ class Game {
         }
         this.move_number_were_waiting_for = move_number + 2;
 
-
         ++moves_processing;
 
         let passed = false;
