@@ -726,7 +726,9 @@ class Game {
                     'move': encodeMove(move)
                 }));
                 if (this.bot) this.bot.showboard( (board) => {
-                    if (this.bot && board) this.log("Board: " + board);
+                    // At least with leela, this goes to stderr already.
+                    //
+                    //if (this.bot && board) this.log("Board: " + board);
                 });
                 //if (this.bot) this.bot.final_score( (score) => {
                 //    if (this.bot && score) this.bot.SCORE = score.score;
