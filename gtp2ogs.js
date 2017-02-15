@@ -56,6 +56,8 @@ let optimist = require("optimist")
     .describe('kgstime', 'Send time data to bot using kgs-time_settings command')
     .describe('noclock', 'Do not send any clock/time data to the bot')
     .describe('persist', 'Bot process remains running between moves')
+    .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
+    .default('startupbuffer', 5)
 ;
 let argv = optimist.argv;
 
@@ -68,6 +70,10 @@ if (!argv._ || argv._.length == 0) {
 //
 if (argv.timeout) {
     argv.timeout = argv.timeout * 1000;
+}
+
+if (argv.startupbuffer) {
+    argv.startupbuffer = argv.startupbuffer * 1000;
 }
 
 if (argv.beta) {
@@ -109,6 +115,7 @@ class Bot {
         this.commands_sent = 0;
         this.command_callbacks = [];
         this.SCORE = "";
+        this.firstmove = true;
 
         if (DEBUG) {
             this.log("Starting ", cmd.join(' '));
@@ -272,10 +279,14 @@ class Bot {
         let now = Date.now() - this.conn.clock_drift;
 
         if (state.clock.current_player == state.clock.black_player_id) {
-            black_offset = (now - state.clock.last_move) / 1000;
+            black_offset = ((this.firstmove==true ? argv.startupbuffer : 0) + now - state.clock.last_move) / 1000;
         } else {
-            white_offset = (now - state.clock.last_move) / 1000;
+            white_offset = ((this.firstmove==true ? argv.startupbuffer : 0) + now - state.clock.last_move) / 1000;
         }
+
+        // Only relevent with persistent bots
+        //
+        this.firstmove = false;
 
         if (state.time_control.system == 'byoyomi') {
             // GTP spec says time_left should have 0 for stones until main_time has run out.
