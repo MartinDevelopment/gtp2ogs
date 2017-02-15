@@ -524,6 +524,11 @@ class Bot {
         // Only relevent with persistent bots. Leave the setting on until we actually have requested a move.
         //
         this.firstmove = false;
+        //if (this.bot) this.bot.showboard( (board) => {
+            // At least with leela, this goes to stderr already.
+            //
+            //if (this.bot && board) this.log("Board: " + board);
+        //});
 
         this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'), 
             (move) => {
@@ -614,7 +619,7 @@ class Game {
             if (!this.connected) return;
             if (DEBUG) this.log("clock")
 
-            //this.log("Clock: ", clock);
+            this.log("Clock: ", JSON.stringify(clock));
             this.state.clock = clock;
 
             if (this.bot) {
@@ -725,11 +730,11 @@ class Game {
                     'game_id': this.state.game_id,
                     'move': encodeMove(move)
                 }));
-                if (this.bot) this.bot.showboard( (board) => {
+                //if (this.bot) this.bot.showboard( (board) => {
                     // At least with leela, this goes to stderr already.
                     //
                     //if (this.bot && board) this.log("Board: " + board);
-                });
+                //});
                 //if (this.bot) this.bot.final_score( (score) => {
                 //    if (this.bot && score) this.bot.SCORE = score.score;
                 //});
