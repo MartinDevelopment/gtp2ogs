@@ -229,7 +229,7 @@ class Bot {
     }}}
 
     log(str) { /* {{{ */
-        let arr = ["[" + this.proc.pid + "] " + timeStamp()];
+        let arr = ["[" + this.proc.pid + " " + this.game.game_id + "] " + timeStamp()];
         for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
         }
@@ -237,7 +237,7 @@ class Bot {
         console.log.apply(null, arr);
     } /* }}} */
     error(str) { /* {{{ */
-        let arr = ["[" + this.proc.pid + "] " + timeStamp()];
+        let arr = ["[" + this.proc.pid + " " + this.game.game_id + "] " + timeStamp()];
         for (let i=0; i < arguments.length; ++i) {
             arr.push(arguments[i]);
         }
@@ -513,6 +513,14 @@ class Bot {
         true
         )
     }
+    showboard(cb) {
+        this.command("showboard", (board) => {
+            cb({'board': board});
+        },
+        null,
+        true
+        )
+    }
     // TODO: We may want to have a timeout here, in case bot crashes. Set it before this.command, clear it in the callback?
     //
     genmove(state, cb) { /* {{{ */
@@ -717,10 +725,12 @@ class Game {
                     'game_id': this.state.game_id,
                     'move': encodeMove(move)
                 }));
-                if (this.bot) this.bot.final_score( (score) => {
-                    //this.log("After Chat, score is" + JSON.stringify(score));
-                    if (this.bot && score) this.bot.SCORE = score.score;
+                if (this.bot) this.bot.showboard( (board) => {
+                    if (this.bot && board) this.log("Board: " + board);
                 });
+                //if (this.bot) this.bot.final_score( (score) => {
+                //    if (this.bot && score) this.bot.SCORE = score.score;
+                //});
                 //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
             }
             if (!PERSIST) {
