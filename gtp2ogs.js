@@ -284,10 +284,6 @@ class Bot {
             white_offset = ((this.firstmove==true ? argv.startupbuffer : 0) + now - state.clock.last_move) / 1000;
         }
 
-        // Only relevent with persistent bots
-        //
-        this.firstmove = false;
-
         if (state.time_control.system == 'byoyomi') {
             // GTP spec says time_left should have 0 for stones until main_time has run out.
             //
@@ -525,8 +521,11 @@ class Bot {
     // TODO: We may want to have a timeout here, in case bot crashes. Set it before this.command, clear it in the callback?
     //
     genmove(state, cb) { /* {{{ */
-        //this.log("state in genmove: ", JSON.stringify(state, 4, null));
-        this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'),
+        // Only relevent with persistent bots. Leave the setting on until we actually have requested a move.
+        //
+        this.firstmove = false;
+
+        this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'), 
             (move) => {
                 move = typeof(move) == "string" ? move.toLowerCase() : null;
                 let resign = move == 'resign';
