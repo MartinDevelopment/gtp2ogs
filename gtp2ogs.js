@@ -116,6 +116,7 @@ class Bot {
         this.command_callbacks = [];
         this.SCORE = "";
         this.firstmove = true;
+        this.variations = {};
 
         if (DEBUG) {
             this.log("Starting ", cmd.join(' '));
@@ -128,7 +129,6 @@ class Bot {
             if (stderr_buffer[stderr_buffer.length-1] != '\n') {
                 return;
             }
-
             let errlines = stderr_buffer.split("\n");
             stderr_buffer = "";
             for (let i=0; i < errlines.length; ++i) {
@@ -146,17 +146,23 @@ class Bot {
                         if (rawmoves.length > 1)
                         {
                             let mymove = "";
+                            let mymarks = {};
                             for (let i=0; i < rawmoves.length; i++) {
                                 let x = num2char(gtpchar2num(rawmoves[i].slice(0,1).toLowerCase()));
                                 let y = num2char(this.game.state.width - rawmoves[i].slice(1));
                                 moves += x + y;
-                                if (i==0) mymove = x + y;
+                                if (i==0) {
+                                    mymove = x + y;
+                                    mymarks.circle = mymove;
+                                } else {
+                                    mymarks[i] = x + y;
+                                }
                             }
                             let body = {
                                 "type": "analysis",
-                                "name": myPV[1], // + " " + this.SCORE,
+                                "name": this.variations[rawmoves[0]] ? this.variations[rawmoves[0]].winrate + " " + this.variations[rawmoves[0]].nodecount : myPV[1],
                                 "from": this.game.state.moves.length,
-                                "marks": { "circle": mymove },
+                                "marks": mymarks, //{ "circle": mymove },
                                 "moves": moves
                             }
                             if (moves) {
@@ -166,7 +172,19 @@ class Bot {
                                 }); */
                             }
                         }
+                        this.variations = {};
                     } else {
+                        //   P5 ->  176749 (W: 65.66%) (U: 55.83%) (V: 77.66%:   4924) (N: 71.7%) PV: P5 P2 O2 S5 P3 Q3 S6 R5 Q6 Q2 J4 L6 N6 J6
+                        let myVARIATIONe = /\s*(.*) ->\s+(\d*) \([UW]: ([^%]*%)\) .* PV: (.*)/;
+                        let myVARIATION = myVARIATIONe.exec(errline);
+                        if (myVARIATION)
+                        {
+                            //this.log("Found variation", myVARIATION);
+                            this.variations[myVARIATION[1]] = {};
+                            this.variations[myVARIATION[1]].nodecount = myVARIATION[2];
+                            this.variations[myVARIATION[1]].winrate = myVARIATION[3];
+                            this.variations[myVARIATION[1]].moves = myVARIATION[4].trim();
+                        }
                         /*let mySCORERe = /MC winrate.* score=(.*)/;
                         let mySCORE = mySCORERe.exec(errline);
                         if (mySCORE)
@@ -301,9 +319,9 @@ class Bot {
                 let white_timeleft = Math.max( Math.floor(state.clock.white_time.thinking_time - white_offset), 0);
 
                 this.command("kgs-time_settings byoyomi " + state.time_control.main_time + " "
-                    + Math.floor(state.time_control.period_time -
+                    + Math.max( Math.floor(state.time_control.period_time -
                         (state.clock.current_player == state.clock.black_player_id ? black_offset : white_offset)
-                    )
+                    ), 1)
                     + " " + state.time_control.periods);
                 this.command("time_left black " + black_timeleft + " " + (black_timeleft > 0 ? "0" : state.clock.black_time.periods));
                 this.command("time_left white " + white_timeleft + " " + (white_timeleft > 0 ? "0" : state.clock.white_time.periods));
@@ -317,11 +335,11 @@ class Bot {
                     - white_offset + (state.clock.white_time.periods - 1) * state.time_control.period_time), 0);
 
                 this.command("time_settings " + (state.time_control.main_time + (state.time_control.periods - 1) * state.time_control.period_time) + " "
-                    + Math.floor(state.time_control.period_time -
+                    + Math.max( Math.floor(state.time_control.period_time -
                         (state.clock.current_player == state.clock.black_player_id
                             ? (black_timeleft > 0 ? 0 : black_offset) : (white_timeleft > 0 ? 0 : white_offset)
                         )
-                    )
+                    ), 1)
                     + " 1");
                 // Since we're faking byoyomi using Canadian, time_left actually does mean the time left to play our 1 stone.
                 //
@@ -345,9 +363,9 @@ class Bot {
             }
 
             this.command("time_left black " + (black_timeleft > 0 ? black_timeleft + " 0"
-                : Math.floor(state.clock.black_time.block_time - black_offset) + " " + state.clock.black_time.moves_left));
+                : Math.max( Math.floor(state.clock.black_time.block_time - black_offset), 0) + " " + state.clock.black_time.moves_left));
             this.command("time_left white " + (white_timeleft > 0 ? white_timeleft + " 0"
-                : Math.floor(state.clock.white_time.block_time - white_offset) + " " + state.clock.white_time.moves_left));
+                : Math.max( Math.floor(state.clock.white_time.block_time - white_offset), 0) + " " + state.clock.white_time.moves_left));
         } else if (state.time_control.system == 'fischer') {
             // Not supported by kgs-time_settings and I assume most bots. A better way than absolute is to handle this with
             // a fake Canadian byoyomi. This should let the bot know a good approximation of how to handle
@@ -461,7 +479,7 @@ class Bot {
                 }
             }
         }
-        this.command("showboard", cb, eb);
+        //this.command("showboard", cb, eb);
     } /* }}} */
     command(str, cb, eb, final_command) { /* {{{ */
         this.command_callbacks.push(cb);
