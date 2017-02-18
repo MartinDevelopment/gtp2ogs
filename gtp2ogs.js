@@ -913,7 +913,10 @@ class Connection {
                ) {
                 this.processMove(gamedata);
             } */
-            if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
+            //if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
+            if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id 
+                //&& (gamedata.black.username == "xhu98" || gamedata.white.username == "xhu98")
+            ) {
                 this.processMove(gamedata);
 
                 if (argv.timeout)
@@ -1025,7 +1028,9 @@ class Connection {
         .catch(conn_log);
     }; /* }}} */
     on_challenge(notification) { /* {{{ */
+        //conn_log(JSON.stringify(notification,null,4));
         let reject = false;
+        //if(notification.user.username == "xhu98") reject = false;
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
             conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
             reject = true;
@@ -1039,6 +1044,11 @@ class Connection {
         if (notification.user.ranking < 15) {
             //conn_log(JSON.stringify(notification, null, 4));
             conn_log(notification.user.username + " ranking too low: " + notification.user.ranking);
+            reject = true;
+        }
+
+        if (notification.time_control.main_time > 60 * 60 * 4) {
+            conn_log(notification.time_control.main_time + " too long main_time");
             reject = true;
         }
 
