@@ -1028,7 +1028,7 @@ class Connection {
         .catch(conn_log);
     }; /* }}} */
     on_challenge(notification) { /* {{{ */
-        //conn_log(JSON.stringify(notification,null,4));
+        conn_log(JSON.stringify(notification,null,4));
         let reject = false;
         //if(notification.user.username == "xhu98") reject = false;
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
@@ -1049,6 +1049,15 @@ class Connection {
 
         if (notification.time_control.main_time > 60 * 60 * 4) {
             conn_log(notification.time_control.main_time + " too long main_time");
+            reject = true;
+        }
+
+        if ( (notification.time_control.period_time &&  notification.time_control.period_time < 10)
+            || (notification.time_control.time_increment &&  notification.time_control.time_increment < 10)
+            || (notification.time_control.per_move &&  notification.time_control.per_move < 10)
+            )
+        {
+            conn_log(notification.time_control.period_time + " too short period_time");
             reject = true;
         }
 
