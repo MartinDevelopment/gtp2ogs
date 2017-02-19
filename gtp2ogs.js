@@ -432,6 +432,8 @@ class Bot {
 
         this.loadClock(state);
 
+        this.game.my_color = this.conn.bot_id == state.players.black.id ? "black" : "white";
+
         if (state.initial_state) {
             let black = decodeMoves(state.initial_state.black, state.width);
             let white = decodeMoves(state.initial_state.white, state.width);
@@ -459,16 +461,16 @@ class Bot {
         }
 
         // Replay moves made
-        let color = state.initial_player
-        let handicaps_left = state.handicap
-        let moves = decodeMoves(state.moves, state.width) 
+        let color = state.initial_player;
+        let handicaps_left = state.handicap;
+        let moves = decodeMoves(state.moves, state.width);
         for (let i=0; i < moves.length; ++i) {
             let move = moves[i];
             let c = color
             if (move.edited) {
                 c = move['color']
             }
-            this.last_color = c;
+            //this.last_color = c;
             this.command("play " + c + ' ' + move2gtpvertex(move, state.width))
             if (! move.edited) {
                 if (state.free_handicap_placement && handicaps_left > 1) {
@@ -548,7 +550,8 @@ class Bot {
             //if (this.bot && board) this.log("Board: " + board);
         //});
 
-        this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'), 
+        //this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'),
+        this.command("genmove " + this.game.my_color,
             (move) => {
                 move = typeof(move) == "string" ? move.toLowerCase() : null;
                 let resign = move == 'resign';
@@ -596,6 +599,7 @@ class Game {
         this.state = null;
         this.waiting_on_gamedata_to_make_move = false;
         this.move_number_were_waiting_for = -1;
+        this.opponent_evenodd = null;
         this.connected = true;
         this.bot = null;
         this.my_color = null;
@@ -674,10 +678,12 @@ class Game {
             if (this.bot && PERSIST) {
                 // Since the bot isn't restarting each move, we need to tell it about opponent moves
                 //
-                if (this.move_number_were_waiting_for == move.move_number) {
-                    //if (DEBUG) this.log("Received raw move", JSON.stringify(move) );
-                    //if (DEBUG) this.log("Received decoded move", decodeMoves(move.move, this.state.width)[0]);
-                    //if (DEBUG) this.log("Waiting for move", this.move_number_were_waiting_for);
+                // Using move_number_were_waiting_for was a terrible hack that causes problems in some games,
+                // either because of move vs active_game event race condition or something else. Real solution
+                // is to track and send each opponent move.
+                //
+                //if (this.move_number_were_waiting_for == move.move_number) {
+                if (move.move_number % 2 == this.opponent_evenodd) {
                     this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
                 } else {
                     if (DEBUG) this.log("Ignoring move", move.move_number, "waiting for move", this.move_number_were_waiting_for);
@@ -722,7 +728,7 @@ class Game {
 
         if (!this.bot) {
             this.log("Starting new bot process");
-            this.bot = new Bot(conn, this, bot_command);
+            this.bot = new Bot(this.conn, this, bot_command);
 
             this.log("State loading for new bot");
             this.bot.loadState(this.state, () => {
@@ -907,14 +913,27 @@ class Connection {
 
             // OGS auto scores bot games now, no removal processing is needed by the bot.
             //
+            // Eventually might want OGS to not auto score, or make it bot-optional to enforce.
+            // Some bots can handle stone removal process.
+            //
             /* if (gamedata.phase == 'stone removal'
                 && ((!gamedata.black.accepted && gamedata.black.id == this.bot_id)
                 ||  (!gamedata.white.accepted && gamedata.white.id == this.bot_id))
                ) {
                 this.processMove(gamedata);
             } */
-            //if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id) {
-            if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id 
+            // Create the game object so we can set opponent_evenodd. Difficulty to set in loadState since
+            // state date doesn't clearly know whose turn it is?
+            //
+            let game = this.connectToGame(gamedata.id);
+
+            if (gamedata.player_to_move == this.bot_id) {
+                game.opponent_evenodd = gamedata.move_number % 2;
+            } else {
+                game.opponent_evenodd = (gamedata.move_number + 1) % 2;
+            }
+
+            if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id
                 //&& (gamedata.black.username == "xhu98" || gamedata.white.username == "xhu98")
             ) {
                 this.processMove(gamedata);
