@@ -624,6 +624,10 @@ class Game {
             }
         }
 
+        this.socket.on('game/' + game_id + '/undo_requested', (undodata) => {
+            this.log("Undo requested", JSON.stringify(undodata, null, 4));
+        });
+
         this.socket.on('game/' + game_id + '/gamedata', (gamedata) => {
             if (!this.connected) return;
             this.log("gamedata")
@@ -1047,7 +1051,7 @@ class Connection {
         .catch(conn_log);
     }; /* }}} */
     on_challenge(notification) { /* {{{ */
-        conn_log(JSON.stringify(notification,null,4));
+        //conn_log(JSON.stringify(notification,null,4));
         let reject = false;
         //if(notification.user.username == "xhu98") reject = false;
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
@@ -1083,6 +1087,8 @@ class Connection {
             conn_log(notification.time_control.period_time + " too short period_time");
             reject = true;
         }
+
+        if(notification.user.username == "roy7") reject = false;
 
         if (!reject) {
             conn_log("Accepting challenge, game_id = "  + notification.game_id);
