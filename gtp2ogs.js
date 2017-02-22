@@ -137,12 +137,13 @@ class Bot {
                     continue;
                 } else {
                     this.error("stderr: " + errline);
-                    let myPVRe = /visits, score (.*) \(from.* PV: (.*)/;
+                    // 72622 visits, score 59.56% (from 59.46%) PV: R11 F16 G16 G17 E16 H16 F15 H14 G18 H12 J13 H13 K11 H10 K9 H8 F10
+                    let myPVRe = /(\d*) visits, score (.*) \(from.* PV: (.*)/;
                     let myPV = myPVRe.exec(errline);
                     if (myPV)
                     {
                         let moves = "";
-                        let rawmoves = myPV[2].trim().split(" ");
+                        let rawmoves = myPV[3].trim().split(" ");
                         if (rawmoves.length > 1)
                         {
                             let mymove = "";
@@ -160,7 +161,9 @@ class Bot {
                             }
                             let body = {
                                 "type": "analysis",
-                                "name": this.variations[rawmoves[0]] ? this.variations[rawmoves[0]].winrate + " " + this.variations[rawmoves[0]].nodecount : myPV[1],
+                                "name": this.variations[rawmoves[0]] ? 
+                                    //this.variations[rawmoves[0]].winrate + " " + this.variations[rawmoves[0]].nodecount + " of " + myPV[1] : myPV[2],
+                                    this.variations[rawmoves[0]].winrate + " " + this.variations[rawmoves[0]].nodecount : myPV[2],
                                 "from": this.game.state.moves.length,
                                 "marks": mymarks, //{ "circle": mymove },
                                 "moves": moves
@@ -984,9 +987,9 @@ class Connection {
         return obj;
     } /* }}} */
     connectToGame(game_id) { /* {{{ */
-        if (DEBUG) {
-            conn_log("Connecting to game", game_id);
-        }
+        //if (DEBUG) {
+        //    conn_log("Connecting to game", game_id);
+        //}
 
         if (argv.timeout)
         {
