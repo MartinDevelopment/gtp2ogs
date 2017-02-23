@@ -1002,7 +1002,7 @@ class Connection {
         }
 
         if (game_id in this.connected_games) {
-            if (DEBUG) conn_log("Connected to game", game_id, "already");
+            //if (DEBUG) conn_log("Connected to game", game_id, "already");
             return this.connected_games[game_id];
         }
 
@@ -1056,6 +1056,7 @@ class Connection {
     on_challenge(notification) { /* {{{ */
         //conn_log(JSON.stringify(notification,null,4));
         let reject = false;
+
         //if(notification.user.username == "xhu98") reject = false;
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
             conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
@@ -1064,6 +1065,11 @@ class Connection {
 
         if (notification.width != notification.height) {
             conn_log("board was not square, rejecting challenge");
+            reject = true;
+        }
+
+        if (notification.width != 19) {
+            conn_log("board not 19 wide, rejecting challenge");
             reject = true;
         }
 
@@ -1082,9 +1088,9 @@ class Connection {
             reject = true;
         } */
 
-        if ( (notification.time_control.period_time &&  notification.time_control.period_time < 10)
-            || (notification.time_control.time_increment &&  notification.time_control.time_increment < 10)
-            || (notification.time_control.per_move &&  notification.time_control.per_move < 10)
+        if ( (notification.time_control.period_time &&  notification.time_control.period_time < 30)
+            || (notification.time_control.time_increment &&  notification.time_control.time_increment < 30)
+            || (notification.time_control.per_move &&  notification.time_control.per_move < 30)
             )
         {
             conn_log(notification.time_control.period_time + " too short period_time");
