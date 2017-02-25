@@ -110,6 +110,14 @@ class Bot {
         this.conn = conn;
         this.game = game;
         let leelaargs = cmd.slice(1);
+        //console.log(game);
+//        if (game.state.players.black.id == 192100 || game.state.players.white.id == 192100){
+        if (game.state.players.black.id == 69627 || game.state.players.white.id == 69627){
+            leelaargs.push("--threads=4");
+        } else {
+            leelaargs.push("--playouts=75000");
+            leelaargs.push("--threads=4");
+        }
         leelaargs.push("--logfile=" + this.game.game_id + ".log");
         this.proc = spawn(cmd[0], leelaargs);
         this.commands_sent = 0;
@@ -119,7 +127,8 @@ class Bot {
         this.variations = {};
 
         if (DEBUG) {
-            this.log("Starting ", cmd.join(' '));
+            //this.log("Starting ", cmd.join(' '));
+            this.log("Starting ", leelaargs.join(' '));
         }
 
         let stderr_buffer = "";
@@ -1057,7 +1066,7 @@ class Connection {
         //conn_log(JSON.stringify(notification,null,4));
         let reject = false;
 
-        //if(notification.user.username == "xhu98") reject = false;
+        //if(notification.user.username == "krnzmb") reject = false;
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
             conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
             reject = true;
@@ -1072,7 +1081,7 @@ class Connection {
             conn_log("board not 19 wide, rejecting challenge");
             reject = true;
         }
-
+        
         if (notification.user.ranking < 15) {
             //conn_log(JSON.stringify(notification, null, 4));
             conn_log(notification.user.username + " ranking too low: " + notification.user.ranking);
@@ -1088,9 +1097,9 @@ class Connection {
             reject = true;
         } */
 
-        if ( (notification.time_control.period_time &&  notification.time_control.period_time < 30)
-            || (notification.time_control.time_increment &&  notification.time_control.time_increment < 30)
-            || (notification.time_control.per_move &&  notification.time_control.per_move < 30)
+        if ( (notification.time_control.period_time &&  notification.time_control.period_time < 15)
+            || (notification.time_control.time_increment &&  notification.time_control.time_increment < 15)
+            || (notification.time_control.per_move &&  notification.time_control.per_move < 15)
             )
         {
             conn_log(notification.time_control.period_time + " too short period_time");
