@@ -1016,10 +1016,6 @@ class Connection {
         return obj;
     } /* }}} */
     connectToGame(game_id) { /* {{{ */
-        if (DEBUG) {
-            conn_log("Connecting to game", game_id);
-        }
-
         if (argv.timeout)
         {
             if (game_id in this.connected_games) {
