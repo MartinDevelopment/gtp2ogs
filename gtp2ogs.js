@@ -985,7 +985,7 @@ class Connection {
                 game.opponent_evenodd = (gamedata.move_number + 1) % 2;
             }
 
-            if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id)
+            if (gamedata.phase == "play" && gamedata.player_to_move == this.bot_id
                 //&& (gamedata.black.username == "xhu98" || gamedata.white.username == "xhu98")
             ) {
                 // Going to make moves based on gamedata or moves coming in for now on, instead of active_game updates
