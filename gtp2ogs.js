@@ -110,11 +110,18 @@ class Bot {
         this.conn = conn;
         this.game = game;
         let leelaargs = cmd.slice(1);
-        //console.log(game);
-//        if (game.state.players.black.id == 192100 || game.state.players.white.id == 192100){
-        if (game.state.players.black.id == 69627 || game.state.players.white.id == 69627){
+        if (game.state.players.black.id == 192100 || game.state.players.white.id == 192100) {
+            // Korean Zombie, live solo play generally
+            leelaargs.push("--threads=4");
+        } else if (game.state.players.black.id == 172599 || game.state.players.white.id == 172599) {
+            // Haylee correspondence? Plenty of time to think so 2 threads but cap playouts
+            leelaargs.push("--threads=2");
+            leelaargs.push("--playouts=100000");
+        } else if (game.state.players.black.id == 69627 || game.state.players.white.id == 69627) {
+            // xhu98, normallly Friday night streams
             leelaargs.push("--threads=4");
         } else {
+            // Make sure correspondence doesn't run for 20 hours...
             leelaargs.push("--playouts=75000");
             leelaargs.push("--threads=4");
         }
@@ -646,6 +653,17 @@ class Game {
 
             //this.log("Gamedata:", JSON.stringify(gamedata, null, 4));
             this.state = gamedata;
+
+            // If server has issues it might send us a new gamedata packet and not a move event. We could try to
+            // check if we're missing a move and send it to bot out of gamadata. For now as a safe fallback just
+            // restart the bot by killing it here if another gamedata comes in. There normally should only be one
+            // before we process any moves, and makeMove() is where a new Bot is created.
+            //
+            if (this.bot) {
+                this.log("Killing bot because of gamedata packet after bot was started");
+                this.bot.kill();
+                this.bot = null;
+            }
             check_for_move();
 
             this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
@@ -1066,7 +1084,7 @@ class Connection {
         //conn_log(JSON.stringify(notification,null,4));
         let reject = false;
 
-        //if(notification.user.username == "krnzmb") reject = false;
+        if(notification.user.username == "krnzmb") reject = false;
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
             conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
             reject = true;
@@ -1097,9 +1115,9 @@ class Connection {
             reject = true;
         } */
 
-        if ( (notification.time_control.period_time &&  notification.time_control.period_time < 15)
-            || (notification.time_control.time_increment &&  notification.time_control.time_increment < 15)
-            || (notification.time_control.per_move &&  notification.time_control.per_move < 15)
+        if ( (notification.time_control.period_time &&  notification.time_control.period_time < 30)
+            || (notification.time_control.time_increment &&  notification.time_control.time_increment < 30)
+            || (notification.time_control.per_move &&  notification.time_control.per_move < 30)
             )
         {
             conn_log(notification.time_control.period_time + " too short period_time");
