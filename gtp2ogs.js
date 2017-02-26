@@ -86,6 +86,7 @@ if (argv.debug) {
 
 if (argv.persist) {
     PERSIST = true;
+}
 
 // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
 if (argv.kgstime) {
@@ -663,6 +664,7 @@ class Game {
                 this.bot.kill();
                 this.bot = null;
             }
+
             check_for_move();
 
             this.my_color = this.conn.bot_id == this.state.players.black.id ? "black" : "white";
