@@ -4,9 +4,9 @@
 
 process.title = 'gtp2ogs';
 let DEBUG = false;
+let PERSIST = false;
 let KGSTIME = false;
 let NOCLOCK = false;
-let PERSIST = false;
 
 let spawn = require('child_process').spawn;
 let os = require('os')
@@ -53,9 +53,9 @@ let optimist = require("optimist")
     .describe('beta', 'Connect to the beta server (sets ggs/rest hosts to the beta server)')
     .describe('debug', 'Output GTP command and responses from your Go engine')
     .describe('json', 'Send and receive GTP commands in a JSON encoded format')
+    .describe('persist', 'Bot process remains running between moves')
     .describe('kgstime', 'Send time data to bot using kgs-time_settings command')
     .describe('noclock', 'Do not send any clock/time data to the bot')
-    .describe('persist', 'Bot process remains running between moves')
     .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
     .default('startupbuffer', 5)
 ;
@@ -84,6 +84,9 @@ if (argv.debug) {
     DEBUG = true;
 }
 
+if (argv.persist) {
+    PERSIST = true;
+
 // TODO: Test known_commands for kgs-time_settings to set this, and remove the command line option
 if (argv.kgstime) {
     KGSTIME = true;
@@ -91,10 +94,6 @@ if (argv.kgstime) {
 
 if (argv.noclock) {
     NOCLOCK = true;
-}
-
-if (argv.persist) {
-    PERSIST = true;
 }
 
 let bot_command = argv._;
@@ -109,6 +108,7 @@ class Bot {
     constructor(conn, game, cmd) {{{
         this.conn = conn;
         this.game = game;
+
         let leelaargs = cmd.slice(1);
         if (game.state.players.black.id == 192100 || game.state.players.white.id == 192100) {
             // Korean Zombie, live solo play generally
@@ -447,11 +447,10 @@ class Bot {
         this.command("clear_board");
         this.command("komi " + state.komi);
 
+        this.game.my_color = this.conn.bot_id == state.players.black.id ? "black" : "white";
         //this.log(state);
 
         this.loadClock(state);
-
-        this.game.my_color = this.conn.bot_id == state.players.black.id ? "black" : "white";
 
         if (state.initial_state) {
             let black = decodeMoves(state.initial_state.black, state.width);
@@ -569,7 +568,7 @@ class Bot {
             //if (this.bot && board) this.log("Board: " + board);
         //});
 
-        //this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'),
+        //this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'), 
         this.command("genmove " + this.game.my_color,
             (move) => {
                 move = typeof(move) == "string" ? move.toLowerCase() : null;
@@ -918,7 +917,8 @@ class Connection {
         });
         socket.on('disconnect', () => {
             this.connected = false;
-            conn_log("disconnect received from server");
+
+            conn_log("Disconnected from server");
             if (argv.timeout)
             {
                 for (let game_id in this.connected_game_timeouts)
@@ -1014,9 +1014,9 @@ class Connection {
         return obj;
     } /* }}} */
     connectToGame(game_id) { /* {{{ */
-        //if (DEBUG) {
-        //    conn_log("Connecting to game", game_id);
-        //}
+        if (DEBUG) {
+            conn_log("Connecting to game", game_id);
+        }
 
         if (argv.timeout)
         {
