@@ -118,13 +118,16 @@ class Bot {
             // Haylee correspondence? Plenty of time to think so 2 threads but cap playouts
             leelaargs.push("--threads=2");
             leelaargs.push("--playouts=100000");
+        } else if (game.state.players.black.id == 177479 || game.state.players.white.id == 177479) {
+            // guoming.huang, heavy blitz player
+            leelaargs.push("--threads=3");
         } else if (game.state.players.black.id == 69627 || game.state.players.white.id == 69627) {
             // xhu98, normallly Friday night streams
             leelaargs.push("--threads=4");
         } else {
             // Make sure correspondence doesn't run for 20 hours...
             leelaargs.push("--playouts=75000");
-            leelaargs.push("--threads=4");
+            leelaargs.push("--threads=2");
         }
         leelaargs.push("--logfile=" + this.game.game_id + ".log");
         this.proc = spawn(cmd[0], leelaargs);
@@ -1091,9 +1094,9 @@ class Connection {
             reject = true;
         } */
 
-        if ( (notification.time_control.period_time &&  notification.time_control.period_time < 30)
-            || (notification.time_control.time_increment &&  notification.time_control.time_increment < 30)
-            || (notification.time_control.per_move &&  notification.time_control.per_move < 30)
+        if ( (notification.time_control.period_time &&  notification.time_control.period_time < 15)
+            || (notification.time_control.time_increment &&  notification.time_control.time_increment < 15)
+            || (notification.time_control.per_move &&  notification.time_control.per_move < 15)
             )
         {
             conn_log(notification.time_control.period_time + " too short period_time");
