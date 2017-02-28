@@ -471,12 +471,6 @@ class Bot {
                     this.command("play white " + move2gtpvertex(white[i], state.width));
                 }
             }
-
-            // last_color is used in genmove() to know whose move we are making. Perhaps we should store and only genmove
-            // our own color, but for now this will fix the situation where there are handicap stones and it is white's turn
-            // even with no black moves recorded.
-            //
-            this.last_color = state.clock.current_player == state.clock.black_player_id ? "white" : "black";
         }
 
         // Replay moves made
@@ -489,7 +483,6 @@ class Bot {
             if (move.edited) {
                 c = move['color']
             }
-            //this.last_color = c;
             this.command("play " + c + ' ' + move2gtpvertex(move, state.width))
             if (! move.edited) {
                 if (state.free_handicap_placement && handicaps_left > 1) {
@@ -569,7 +562,6 @@ class Bot {
             //if (this.bot && board) this.log("Board: " + board);
         //});
 
-        //this.command("genmove " + (this.last_color == 'black' ? 'white' : 'black'), 
         this.command("genmove " + this.game.my_color,
             (move) => {
                 move = typeof(move) == "string" ? move.toLowerCase() : null;
@@ -616,34 +608,10 @@ class Game {
         this.game_id = game_id;
         this.socket = conn.socket;
         this.state = null;
-        this.waiting_on_gamedata_to_make_move = false;
-        this.move_number_were_waiting_for = -1;
         this.opponent_evenodd = null;
         this.connected = true;
         this.bot = null;
         this.my_color = null;
-
-        // check_for_move is no longer called anywhere, now that moves are processed after gamedata and move messages from server
-        //
-        let check_for_move = () => {
-            if (!this.state) {
-                console.error('Gamedata not received yet for game, but check_for_move has been called');
-                return;
-            }
-            if (this.state.phase == 'play') {
-                if (this.waiting_on_gamedata_to_make_move && this.state.moves.length == this.move_number_were_waiting_for) {
-                    this.makeMove(this.move_number_were_waiting_for);
-                    this.waiting_on_gamedata_to_make_move = false;
-                }
-            }
-            else if (this.state.phase == 'finished') {
-                this.log("Game is finished");
-                if (DEBUG) this.log("Killing bot process");
-                if (this.bot) this.bot.kill();
-                this.bot = null;
-                //this.disconnect();
-            }
-        }
 
         // TODO: Command line options to allow undo?
         //
@@ -675,11 +643,12 @@ class Game {
             if (this.state.phase == "play" && this.state.clock.current_player == this.conn.bot_id) {
                 this.makeMove(this.state.moves.length);
             }
-
-            //check_for_move();
         });
         // TODO: I seem to get this event consistantly later than states are loaded. Calling loadClock below ends up being after 
         // genmove is already called, so the bot doesn't have accurate clock info before doing genmove. Unsure how to fix this.
+        //
+        // TODO: Update clock information each time we get it, but only send it immediately before a genmove instead of each time.
+        // Bot only needs updated clock info right before a genmove, and extra communcation would interfere with Leela pondering.
         //
         this.socket.on('game/' + game_id + '/clock', (clock) => {
             if (!this.connected) return;
@@ -721,12 +690,8 @@ class Game {
             //
             if (this.bot && PERSIST) {
                 // Since the bot isn't restarting each move, we need to tell it about opponent moves
+                // Track and send each opponent move by tracking player colors.
                 //
-                // Using move_number_were_waiting_for was a terrible hack that causes problems in some games,
-                // either because of move vs active_game event race condition or something else. Real solution
-                // is to track and send each opponent move.
-                //
-                //if (this.move_number_were_waiting_for == move.move_number) {
                 if (move.move_number % 2 == this.opponent_evenodd) {
                     this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
                 } else {
@@ -738,7 +703,6 @@ class Game {
                 //
                 this.makeMove(this.state.moves.length);
             }
-            //check_for_move();
         });
 
         this.socket.emit('game/connect', this.auth({
@@ -748,14 +712,11 @@ class Game {
     makeMove(move_number) { /* {{{ */
         if (DEBUG && this.state) { this.log("makeMove", move_number, "is", this.state.moves.length, "!=", move_number, "?"); }
         if (!this.state || this.state.moves.length != move_number) {
-            this.waiting_on_gamedata_to_make_move = true;
-            this.move_number_were_waiting_for = move_number;
             return;
         }
         if (this.state.phase != 'play') {
             return;
         }
-        this.move_number_were_waiting_for = move_number + 2;
 
         ++moves_processing;
 
@@ -972,8 +933,8 @@ class Connection {
                ) {
                 this.processMove(gamedata);
             } */
-            // Create the game object so we can set opponent_evenodd. Difficulty to set in loadState since
-            // state date doesn't clearly know whose turn it is?
+            // Create the game object so we can set opponent_evenodd. Difficult to set in loadState since
+            // state date doesn't clearly know whose turn it is? (Update: state.clock might tell us)
             //
             let game = this.connectToGame(gamedata.id);
 
@@ -1004,7 +965,7 @@ class Connection {
                 }
             }
             // When a game ends, we don't get a "finished" active_game.phase. Probably since the game is no
-            // longer active.
+            // longer active.(Update: We do get finished active_game events? Unclear why I added prior note.)
             //
             if (gamedata.phase == "finished") {
                 if (DEBUG) conn_log(gamedata.id, "gamedata.phase == finished");
