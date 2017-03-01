@@ -1101,6 +1101,7 @@ class Connection {
         if ( (notification.time_control.period_time &&  notification.time_control.period_time < 20)
             || (notification.time_control.time_increment &&  notification.time_control.time_increment < 20)
             || (notification.time_control.per_move &&  notification.time_control.per_move < 20)
+            || (notification.time_control.stones_per_period && (notification.time_control.period_time / notification.time_control.stones_per_period) < 20)
             )
         {
             conn_log(notification.time_control.period_time + " too short period_time");
