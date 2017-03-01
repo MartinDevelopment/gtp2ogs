@@ -114,6 +114,9 @@ class Bot {
         if (game.state.players.black.id == 192100 || game.state.players.white.id == 192100) {
             // Korean Zombie, live solo play generally
             leelaargs.push("--threads=4");
+        } else if (game.state.players.black.id == 472 || game.state.players.white.id == 472) {
+            // Ten
+            leelaargs.push("--threads=4");
         } else if (game.state.players.black.id == 172599 || game.state.players.white.id == 172599) {
             // Haylee correspondence? Plenty of time to think so 2 threads but cap playouts
             leelaargs.push("--threads=2");
@@ -1095,9 +1098,9 @@ class Connection {
             reject = true;
         } */
 
-        if ( (notification.time_control.period_time &&  notification.time_control.period_time < 15)
-            || (notification.time_control.time_increment &&  notification.time_control.time_increment < 15)
-            || (notification.time_control.per_move &&  notification.time_control.per_move < 15)
+        if ( (notification.time_control.period_time &&  notification.time_control.period_time < 20)
+            || (notification.time_control.time_increment &&  notification.time_control.time_increment < 20)
+            || (notification.time_control.per_move &&  notification.time_control.per_move < 20)
             )
         {
             conn_log(notification.time_control.period_time + " too short period_time");
