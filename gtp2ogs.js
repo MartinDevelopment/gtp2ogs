@@ -662,7 +662,6 @@ class Game {
             //
             if (this.state.free_handicap_placement && this.state.handicap > 1) {
                 this.opponent_evenodd = (this.opponent_evenodd + this.state.handicap - 1) % 2;
-
             }
 
             // If server has issues it might send us a new gamedata packet and not a move event. We could try to
