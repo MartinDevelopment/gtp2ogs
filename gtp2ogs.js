@@ -455,8 +455,6 @@ class Bot {
         this.command("komi " + state.komi);
         //this.log(state);
 
-        this.game.my_color = this.conn.bot_id == state.players.black.id ? "black" : "white";
-
         this.loadClock(state);
 
         if (state.initial_state) {
@@ -710,15 +708,15 @@ class Game {
             //
             this.log(this.state.free_handicap_placement, this.state.handicap, this.state.moves.length);
             if (this.state.free_handicap_placement && (this.state.handicap) > this.state.moves.length) {
-                    if (this.my_color == "black") {
-                        // If we are black, we make extra moves.
-                        //
-                        this.makeMove(this.state.moves.length);
-                    } else {
-                        // If we are white, we wait for opponent to make extra moves.
-                        if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
-                        if (DEBUG) this.log("Waiting for opponent to finish", this.state.handicap - this.state.moves.length, "more handicap moves");
-                    }
+                if (this.my_color == "black") {
+                    // If we are black, we make extra moves.
+                    //
+                    this.makeMove(this.state.moves.length);
+                } else {
+                    // If we are white, we wait for opponent to make extra moves.
+                    if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
+                    if (DEBUG) this.log("Waiting for opponent to finish", this.state.handicap - this.state.moves.length, "more handicap moves");
+                }
             } else {
                 if (move.move_number % 2 == this.opponent_evenodd) {
                     // We just got a move from the opponent, so we can move immediately.
@@ -960,8 +958,7 @@ class Connection {
                ) {
                 this.processMove(gamedata);
             } */
-            // Create the game object so we can set opponent_evenodd. Difficult to set in loadState since
-            // state date doesn't clearly know whose turn it is? (Update: state.clock might tell us)
+
             // Set up the game so it can listen for events.
             //
             let game = this.connectToGame(gamedata.id);
