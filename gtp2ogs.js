@@ -592,6 +592,11 @@ class Bot {
         //
         this.loadClock(state);
 
+        // Do this here so we only do it once, plus if there is a long delay between clock message and move message, we'll
+        // subtract that missing time from what we tell the bot.
+        //
+        this.loadClock(state);
+
         this.command("genmove " + this.game.my_color,
             (move) => {
                 move = typeof(move) == "string" ? move.toLowerCase() : null;
@@ -681,12 +686,7 @@ class Game {
                 this.makeMove(this.state.moves.length);
             }
         });
-        // TODO: I seem to get this event consistantly later than states are loaded. Calling loadClock below ends up being after 
-        // genmove is already called, so the bot doesn't have accurate clock info before doing genmove. Unsure how to fix this.
-        //
-        // TODO: Update clock information each time we get it, but only send it immediately before a genmove instead of each time.
-        // Bot only needs updated clock info right before a genmove, and extra communcation would interfere with Leela pondering.
-        //
+
         this.socket.on('game/' + game_id + '/clock', (clock) => {
             if (!this.connected) return;
             if (DEBUG) this.log("clock");
@@ -694,6 +694,7 @@ class Game {
             //this.log("Clock: ", JSON.stringify(clock));
             this.state.clock = clock;
 
+            // Bot only needs updated clock info right before a genmove, and extra communcation would interfere with Leela pondering.
             //if (this.bot) {
             //    this.bot.loadClock(this.state);
             //}
