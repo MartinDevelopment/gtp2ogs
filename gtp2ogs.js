@@ -592,11 +592,6 @@ class Bot {
         //
         this.loadClock(state);
 
-        // Do this here so we only do it once, plus if there is a long delay between clock message and move message, we'll
-        // subtract that missing time from what we tell the bot.
-        //
-        this.loadClock(state);
-
         this.command("genmove " + this.game.my_color,
             (move) => {
                 move = typeof(move) == "string" ? move.toLowerCase() : null;
