@@ -184,9 +184,12 @@ class Bot {
                             }
                             let body = {
                                 "type": "analysis",
-                                "name": this.variations[rawmoves[0]] ? 
-                                    //this.variations[rawmoves[0]].winrate + " " + this.variations[rawmoves[0]].nodecount + " of " + myPV[1] : myPV[2],
-                                    this.variations[rawmoves[0]].winrate + " " + this.variations[rawmoves[0]].nodecount : myPV[2],
+                                "name": this.variations[rawmoves[0]] ?
+                                    (this.variations[rawmoves[0]].vnwinrate ?
+                                        this.variations[rawmoves[0]].winrate + " (MC " + this.variations[rawmoves[0]].mcwinrate + " VN " + this.variations[rawmoves[0]].vnwinrate
+                                            + ") " + this.variations[rawmoves[0]].nodecount
+                                        : this.variations[rawmoves[0]].winrate + " " + this.variations[rawmoves[0]].nodecount)
+                                    : myPV[2],
                                 "from": this.game.state.moves.length,
                                 "marks": mymarks, //{ "circle": mymove },
                                 "moves": moves
@@ -201,15 +204,33 @@ class Bot {
                         this.variations = {};
                     } else {
                         //   P5 ->  176749 (W: 65.66%) (U: 55.83%) (V: 77.66%:   4924) (N: 71.7%) PV: P5 P2 O2 S5 P3 Q3 S6 R5 Q6 Q2 J4 L6 N6 J6
-                        let myVARIATIONe = /\s*(.*) ->\s+(\d*) \([UW]: ([^%]*%)\) .* PV: (.*)/;
+                        //  Prior version matched for all sizes but no value network information available
+                        //let myVARIATIONe = /\s*(.*) ->\s+(\d*) \([UW]: ([^%]*%)\) .* PV: (.*)/;
+                        let myVARIATIONe = /\s*(.*) ->\s+(\d*) \([W]: ([^%]*%)\) \([U]: ([^%]*%)\) \([V]: ([^%]*%).* PV: (.*)/;
                         let myVARIATION = myVARIATIONe.exec(errline);
                         if (myVARIATION)
                         {
-                            //this.log("Found variation", myVARIATION);
+                            // Found 19x19 result with value network info
+                            //
                             this.variations[myVARIATION[1]] = {};
                             this.variations[myVARIATION[1]].nodecount = myVARIATION[2];
                             this.variations[myVARIATION[1]].winrate = myVARIATION[3];
-                            this.variations[myVARIATION[1]].moves = myVARIATION[4].trim();
+                            this.variations[myVARIATION[1]].mcwinrate = myVARIATION[4];
+                            this.variations[myVARIATION[1]].vnwinrate = myVARIATION[5];
+                            this.variations[myVARIATION[1]].moves = myVARIATION[6].trim();
+                        } else {
+                            // Fallback to version that can also handle other sizes with basic info
+                            //
+                            myVARIATIONe = /\s*(.*) ->\s+(\d*) \([UW]: ([^%]*%)\) .* PV: (.*)/;
+                            myVARIATION = myVARIATIONe.exec(errline);
+                            if (myVARIATION)
+                            {
+                                //this.log("Found variation", myVARIATION);
+                                this.variations[myVARIATION[1]] = {};
+                                this.variations[myVARIATION[1]].nodecount = myVARIATION[2];
+                                this.variations[myVARIATION[1]].winrate = myVARIATION[3];
+                                this.variations[myVARIATION[1]].moves = myVARIATION[4].trim();
+                            }
                         }
                         /*let mySCORERe = /MC winrate.* score=(.*)/;
                         let mySCORE = mySCORERe.exec(errline);
