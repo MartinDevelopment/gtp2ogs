@@ -476,7 +476,7 @@ class Bot {
         this.command("komi " + state.komi);
         //this.log(state);
 
-        this.loadClock(state);
+        //this.loadClock(state);
 
         if (state.initial_state) {
             let black = decodeMoves(state.initial_state.black, state.width);
@@ -587,6 +587,11 @@ class Bot {
             //if (this.bot && board) this.log("Board: " + board);
         //});
 
+        // Do this here so we only do it once, plus if there is a long delay between clock message and move message, we'll
+        // subtract that missing time from what we tell the bot.
+        //
+        this.loadClock(state);
+
         this.command("genmove " + this.game.my_color,
             (move) => {
                 move = typeof(move) == "string" ? move.toLowerCase() : null;
@@ -689,9 +694,9 @@ class Game {
             //this.log("Clock: ", JSON.stringify(clock));
             this.state.clock = clock;
 
-            if (this.bot) {
-                this.bot.loadClock(this.state);
-            }
+            //if (this.bot) {
+            //    this.bot.loadClock(this.state);
+            //}
         });
         this.socket.on('game/' + game_id + '/phase', (phase) => {
             if (!this.connected) return;
