@@ -1331,12 +1331,12 @@ class Connection {
         }
 
         if ( (argv.maxrankedhandicap !== undefined) && notification.ranked && (notification.handicap > argv.maxrankedhandicap) ) {
-            conn_log("Max ranked handicap is " + argv.maxhandicap);
+            conn_log("Max ranked handicap is " + argv.maxrankedhandicap);
             reject = true;
         }
 
         if ( (argv.maxunrankedhandicap !== undefined) && !notification.ranked && (notification.handicap > argv.maxunrankedhandicap) ) {
-            conn_log("Max unranked handicap is " + argv.maxhandicap);
+            conn_log("Max unranked handicap is " + argv.maxunrankedhandicap);
             reject = true;
         }
 
