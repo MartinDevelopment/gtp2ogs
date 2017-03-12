@@ -1104,7 +1104,6 @@ class Connection {
         //conn_log(JSON.stringify(notification,null,4));
         let reject = false;
 
-        if(notification.user.username == "krnzmb") reject = false;
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
             conn_log("Unhandled rules: " + notification.rules + ", rejecting challenge");
             reject = true;
@@ -1121,7 +1120,6 @@ class Connection {
         }
         
         if (notification.user.ranking < 15) {
-            //conn_log(JSON.stringify(notification, null, 4));
             conn_log(notification.user.username + " ranking too low: " + notification.user.ranking);
             reject = true;
         }
@@ -1130,10 +1128,6 @@ class Connection {
             conn_log(notification.user.username + " wanted correspondence");
             reject = true;
         }
-        /* if (notification.time_control.main_time > 60 * 60 * 4 || notification.time_control.initial_time > 60 * 60 * 4) {
-            conn_log(notification.time_control.main_time + " too long main_time");
-            reject = true;
-        } */
 
         if ( (notification.time_control.period_time &&  notification.time_control.period_time < 15)
             || (notification.time_control.time_increment &&  notification.time_control.time_increment < 15)
