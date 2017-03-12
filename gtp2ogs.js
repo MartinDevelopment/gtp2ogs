@@ -1114,31 +1114,6 @@ class Connection {
             reject = true;
         }
 
-        if (notification.width != 19) {
-            conn_log("board not 19 wide, rejecting challenge");
-            reject = true;
-        }
-        
-        if (notification.user.ranking < 15) {
-            conn_log(notification.user.username + " ranking too low: " + notification.user.ranking);
-            reject = true;
-        }
-
-        if (notification.time_control.speed == "correspondence") {
-            conn_log(notification.user.username + " wanted correspondence");
-            reject = true;
-        }
-
-        if ( (notification.time_control.period_time &&  notification.time_control.period_time < 15)
-            || (notification.time_control.time_increment &&  notification.time_control.time_increment < 15)
-            || (notification.time_control.per_move &&  notification.time_control.per_move < 15)
-            || (notification.time_control.stones_per_period && (notification.time_control.period_time / notification.time_control.stones_per_period) < 15)
-            )
-        {
-            conn_log(notification.time_control.period_time + " too short period_time");
-            reject = true;
-        }
-
         if(notification.user.username == "roy7") reject = false;
 
         if (!reject) {
