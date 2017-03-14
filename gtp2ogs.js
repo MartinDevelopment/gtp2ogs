@@ -232,6 +232,10 @@ class Bot {
         } else if (game.state.players.black.id == 69627 || game.state.players.white.id == 69627) {
             // xhu98, normallly Friday night streams
             leelaargs.push("--threads=4");
+        } else if (game.state.ranked) {
+            // Make sure correspondence doesn't run for 20 hours...
+            leelaargs.push("--playouts=75000");
+            leelaargs.push("--threads=4");
         } else {
             // Make sure correspondence doesn't run for 20 hours...
             leelaargs.push("--playouts=75000");
@@ -1206,6 +1210,7 @@ class Connection {
         .catch(conn_log);
     }; /* }}} */
     on_challenge(notification) { /* {{{ */
+conn_log(notification);
         let reject = REJECTNEW;
 
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
@@ -1330,6 +1335,9 @@ class Connection {
             reject = true;
         }
 
+if ( notification.handicap < 0 && notification.ranked ) reject = true;
+
+conn_log("Testing", notification.handicap, " > ", argv.maxrankedhandicap);
         if ( (argv.maxrankedhandicap !== undefined) && notification.ranked && (notification.handicap > argv.maxrankedhandicap) ) {
             conn_log("Max ranked handicap is " + argv.maxrankedhandicap);
             reject = true;
