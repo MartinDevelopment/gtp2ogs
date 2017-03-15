@@ -1235,7 +1235,7 @@ conn_log(notification);
             reject = true;
         }
 
-        if ( !allowed_speeds[notification.time_control.speed] ) {
+        if ( !allowed_speeds[notification.time_control.speed] && (notification.user.username != "saxmaam") ) {
             conn_log(notification.user.username + " wanted speed " + notification.time_control.speed + ", not in: " + argv.speed);
             reject = true;
         }
