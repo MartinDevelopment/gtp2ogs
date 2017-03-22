@@ -33,7 +33,7 @@ let console = require('tracer').colorConsole({
 });
 
 let optimist = require("optimist")
-    .usage("Usage: $0 --username <bot-username> --apikey <apikey> command [arguments]")
+    .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
     .alias('username', 'botid')
     .alias('username', 'bot')
     .alias('username', 'id')
@@ -365,7 +365,7 @@ class Bot {
                 }
             }
 
-            if (stdout_buffer[stdout_buffer.length-1] != '\n') {
+            if (!stdout_buffer || stdout_buffer[stdout_buffer.length-1] != '\n') {
                 //this.log("Partial result received, buffering until the output ends with a newline");
                 return;
             }
