@@ -1386,7 +1386,6 @@ conn_log(notification);
 
 if ( notification.handicap < 0 && notification.ranked ) reject = true;
 
-conn_log("Testing", notification.handicap, " > ", argv.maxrankedhandicap);
         if ( (argv.maxrankedhandicap !== undefined) && notification.ranked && (notification.handicap > argv.maxrankedhandicap) ) {
             conn_log("Max ranked handicap is " + argv.maxrankedhandicap);
             reject = true;
