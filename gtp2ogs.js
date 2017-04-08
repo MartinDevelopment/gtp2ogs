@@ -249,6 +249,8 @@ class Bot {
         this.SCORE = "";
         this.firstmove = true;
         this.variations = {};
+        this.genmovePV = false;
+        this.opponentPV = false;
 
         if (DEBUG) {
             //this.log("Starting ", cmd.join(' '));
@@ -285,7 +287,7 @@ class Bot {
                                 let x = num2char(gtpchar2num(rawmoves[i].slice(0,1).toLowerCase()));
                                 let y = num2char(this.game.state.width - rawmoves[i].slice(1));
                                 moves += x + y;
-                                if (i==0) {
+                                if (i==0 && this.genmovePV) {
                                     mymove = x + y;
                                     mymarks.circle = mymove;
                                 } else {
@@ -300,18 +302,20 @@ class Bot {
                                             + ") " + this.variations[rawmoves[0]].nodecount + " playouts"
                                         : this.variations[rawmoves[0]].winrate + " " + this.variations[rawmoves[0]].nodecount + " playouts")
                                     : myPV[2],
-                                "from": this.game.state.moves.length,
+                                "from": this.opponentPV ? this.game.state.moves.length-1 : this.game.state.moves.length,
                                 "marks": mymarks, //{ "circle": mymove },
                                 "moves": moves
                             }
-                            if (moves) {
-                                this.game.sendChat(body, this.game.state.moves.length+1, "malkovich");
+                            if ((this.genmovePV || this.opponentPV) && moves) {
+                                this.game.sendChat(body, this.opponentPV ? this.game.state.moves.length : this.game.state.moves.length+1, "malkovich");
                                 /* this.influence( (influence) => {
                                     this.log("Callback influence: " + JSON.stringify(influence, null, 4));
                                 }); */
                             }
                         }
                         this.variations = {};
+                        this.genmovePV = false;
+                        this.opponentPV = false;
                     } else {
                         //   P5 ->  176749 (W: 65.66%) (U: 55.83%) (V: 77.66%:   4924) (N: 71.7%) PV: P5 P2 O2 S5 P3 Q3 S6 R5 Q6 Q2 J4 L6 N6 J6
                         //  Prior version matched for all sizes but no value network information available
@@ -341,6 +345,10 @@ class Bot {
                                 this.variations[myVARIATION[1]].winrate = myVARIATION[3];
                                 this.variations[myVARIATION[1]].moves = myVARIATION[4].trim();
                             }
+                        }
+
+                        if (errline.match(/^MC winrate/)) {
+                            this.genmovePV = true;
                         }
                         /*let mySCORERe = /MC winrate.* score=(.*)/;
                         let mySCORE = mySCORERe.exec(errline);
@@ -900,7 +908,10 @@ class Game {
                 if (move.move_number % 2 == this.opponent_evenodd) {
                     // We just got a move from the opponent, so we can move immediately.
                     //
-                    if (this.bot) this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
+                    if (this.bot) {
+                        this.bot.opponentPV = true;
+                        this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
+                    }
                     this.makeMove(this.state.moves.length);
                 } else {
                     if (DEBUG) this.log("Ignoring our own move", move.move_number);
