@@ -222,20 +222,20 @@ class Bot {
             leelaargs.push("--threads=4");
         } else if (game.state.players.black.id == 472 || game.state.players.white.id == 472) {
             // Ten
-            leelaargs.push("--threads=8");
+            leelaargs.push("--threads=16");
         } else if (game.state.players.black.id == 172599 || game.state.players.white.id == 172599) {
             // Haylee correspondence? Plenty of time to think so 2 threads but cap playouts
             leelaargs.push("--threads=2");
             leelaargs.push("--playouts=100000");
         } else if (game.state.players.black.id == 177479 || game.state.players.white.id == 177479) {
             // guoming.huang, heavy blitz player
-            leelaargs.push("--threads=3");
+            leelaargs.push("--threads=4");
         } else if (game.state.players.black.id == 69627 || game.state.players.white.id == 69627) {
             // xhu98, normallly Friday night streams
             leelaargs.push("--threads=4");
         } else if (game.state.ranked) {
             // Make sure correspondence doesn't run for 20 hours...
-            leelaargs.push("--playouts=75000");
+            leelaargs.push("--playouts=100000");
             leelaargs.push("--threads=4");
         } else {
             // Make sure correspondence doesn't run for 20 hours...
