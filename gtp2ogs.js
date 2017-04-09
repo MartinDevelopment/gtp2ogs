@@ -225,8 +225,8 @@ class Bot {
             leelaargs.push("--threads=16");
         } else if (game.state.players.black.id == 172599 || game.state.players.white.id == 172599) {
             // Haylee correspondence? Plenty of time to think so 2 threads but cap playouts
-            leelaargs.push("--threads=2");
-            leelaargs.push("--playouts=100000");
+            leelaargs.push("--threads=1");
+            leelaargs.push("--playouts=150000");
         } else if (game.state.players.black.id == 177479 || game.state.players.white.id == 177479) {
             // guoming.huang, heavy blitz player
             leelaargs.push("--threads=4");
@@ -1110,9 +1110,25 @@ class Connection {
                 })
             }
         }, 10000);
+
         socket.on('event', (data) => {
             this.verbose(data);
         });
+
+        socket.on('error', (err) => {
+            this.connected = false;
+
+            conn_log("Caught error from Connection socket: " + err);
+
+            for (let game_id in this.connected_games) {
+                this.disconnectFromGame(game_id);
+            }
+
+            socket.emit('notification/connect', this.auth({}), (x) => {
+                conn_log(x);
+            });
+        });
+
         socket.on('disconnect', () => {
             this.connected = false;
 
@@ -1189,7 +1205,7 @@ class Connection {
                     if (this.connected_game_timeouts[gamedata.id]) {
                         clearTimeout(this.connected_game_timeouts[gamedata.id])
                     }
-                    conn_log("Setting timeout for", gamedata.id);
+                    if (DEBUG) conn_log("Setting timeout for", gamedata.id);
                     this.connected_game_timeouts[gamedata.id] = setTimeout(() => {
                         this.disconnectFromGame(gamedata.id);
                     }, argv.timeout); /* forget about game after --timeout seconds */
