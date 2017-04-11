@@ -17,6 +17,7 @@ Installation
     npm install socket.io-client
     npm install optimist
     npm install tracer
+    npm install round10
     ```
 
 

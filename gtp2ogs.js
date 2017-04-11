@@ -9,6 +9,7 @@ let KGSTIME = false;
 let NOCLOCK = false;
 let REJECTNEW = false;
 
+let round10 = require('round10').round10;
 let spawn = require('child_process').spawn;
 let os = require('os')
 let io = require('socket.io-client');
@@ -304,9 +305,10 @@ class Bot {
                                 "type": "analysis",
                                 "name": this.variations[rawmoves[0]] ?
                                     (this.variations[rawmoves[0]].vnwinrate ?
-                                        this.variations[rawmoves[0]].winrate + " (MC " + this.variations[rawmoves[0]].mcwinrate + " VN " + this.variations[rawmoves[0]].vnwinrate
-                                            + ") " + this.variations[rawmoves[0]].nodecount + " playouts"
-                                        : this.variations[rawmoves[0]].winrate + " " + this.variations[rawmoves[0]].nodecount + " playouts")
+                                        this.variations[rawmoves[0]].winrate + "% (MC " + this.variations[rawmoves[0]].mcwinrate
+                                            + "% VN " + this.variations[rawmoves[0]].vnwinrate
+                                            + "%) " + this.variations[rawmoves[0]].nodecount + " playouts"
+                                        : this.variations[rawmoves[0]].winrate + "% " + this.variations[rawmoves[0]].nodecount + " playouts")
                                     : myPV[2],
                                 "from": this.opponentPV ? this.game.state.moves.length-1 : this.game.state.moves.length,
                                 "marks": mymarks, //{ "circle": mymove },
@@ -326,7 +328,7 @@ class Bot {
                         //   P5 ->  176749 (W: 65.66%) (U: 55.83%) (V: 77.66%:   4924) (N: 71.7%) PV: P5 P2 O2 S5 P3 Q3 S6 R5 Q6 Q2 J4 L6 N6 J6
                         //  Prior version matched for all sizes but no value network information available
                         //let myVARIATIONe = /\s*(.*) ->\s+(\d*) \([UW]: ([^%]*%)\) .* PV: (.*)/;
-                        let myVARIATIONe = /\s*(.*) ->\s+(\d*) \([W]: ([^%]*%)\) \([U]: ([^%]*%)\) \([V]: ([^%]*%).* PV: (.*)/;
+                        let myVARIATIONe = /\s*(.*) ->\s+(\d*) \([W]: ([^%]*)%\) \([U]: ([^%]*)%\) \([V]: ([^%]*)%.* PV: (.*)/;
                         let myVARIATION = myVARIATIONe.exec(errline);
                         if (myVARIATION)
                         {
@@ -334,21 +336,21 @@ class Bot {
                             //
                             this.variations[myVARIATION[1]] = {};
                             this.variations[myVARIATION[1]].nodecount = myVARIATION[2];
-                            this.variations[myVARIATION[1]].winrate = myVARIATION[3];
-                            this.variations[myVARIATION[1]].mcwinrate = myVARIATION[4];
-                            this.variations[myVARIATION[1]].vnwinrate = myVARIATION[5];
+                            this.variations[myVARIATION[1]].winrate = round10(this.opponentPV ? 100 - myVARIATION[3] : myVARIATION[3], -1);
+                            this.variations[myVARIATION[1]].mcwinrate = round10(this.opponentPV ? 100 - myVARIATION[4] : myVARIATION[4], -1);
+                            this.variations[myVARIATION[1]].vnwinrate = round10(this.opponentPV ? 100 - myVARIATION[5] : myVARIATION[5], -1);
                             this.variations[myVARIATION[1]].moves = myVARIATION[6].trim();
                         } else {
                             // Fallback to version that can also handle other sizes with basic info
                             //
-                            myVARIATIONe = /\s*(.*) ->\s+(\d*) \([UW]: ([^%]*%)\) .* PV: (.*)/;
+                            myVARIATIONe = /\s*(.*) ->\s+(\d*) \([UW]: ([^%]*)%\) .* PV: (.*)/;
                             myVARIATION = myVARIATIONe.exec(errline);
                             if (myVARIATION)
                             {
                                 //this.log("Found variation", myVARIATION);
                                 this.variations[myVARIATION[1]] = {};
                                 this.variations[myVARIATION[1]].nodecount = myVARIATION[2];
-                                this.variations[myVARIATION[1]].winrate = myVARIATION[3];
+                                this.variations[myVARIATION[1]].winrate = round10(this.opponentPV ? 100 - myVARIATION[3] : myVARIATION[3], -1);
                                 this.variations[myVARIATION[1]].moves = myVARIATION[4].trim();
                             }
                         }
@@ -356,12 +358,6 @@ class Bot {
                         if (errline.match(/^MC winrate/)) {
                             this.genmovePV = true;
                         }
-                        /*let mySCORERe = /MC winrate.* score=(.*)/;
-                        let mySCORE = mySCORERe.exec(errline);
-                        if (mySCORE)
-                        {
-                            this.SCORE = mySCORE[1];
-                        }*/
                     }
                 }
             }
