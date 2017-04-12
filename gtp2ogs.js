@@ -295,15 +295,18 @@ class Bot {
                         let rawmoves = myPV[3].trim().split(" ");
                         if (rawmoves.length > 1)
                         {
-                            let mymove = "";
                             let mymarks = {};
                             for (let i=0; i < rawmoves.length; i++) {
                                 let x = num2char(gtpchar2num(rawmoves[i].slice(0,1).toLowerCase()));
                                 let y = num2char(this.game.state.width - rawmoves[i].slice(1));
                                 moves += x + y;
-                                if (i==0 && this.genmovePV) {
-                                    mymove = x + y;
-                                    mymarks.circle = mymove;
+                                if (i==0) {
+                                    if (this.genmovePV) {
+                                        mymarks.circle = x + y;
+                                    } else if (this.opponentPV) {
+                                        mymarks.circle = num2char(this.opponentPV.move[0]) + num2char(this.opponentPV.move[1]);
+                                        mymarks[i] = x + y;
+                                    }
                                 } else {
                                     mymarks[i] = x + y;
                                 }
@@ -318,7 +321,7 @@ class Bot {
                                         : this.variations[rawmoves[0]].winrate + "% " + this.variations[rawmoves[0]].nodecount + " playouts")
                                     : myPV[2],
                                 "from": this.opponentPV ? this.game.state.moves.length-1 : this.game.state.moves.length,
-                                "marks": mymarks, //{ "circle": mymove },
+                                "marks": mymarks,
                                 "moves": moves
                             }
                             if ((this.genmovePV || this.opponentPV) && moves) {
@@ -919,7 +922,7 @@ class Game {
                     // We just got a move from the opponent, so we can move immediately.
                     //
                     if (this.bot) {
-                        this.bot.opponentPV = true;
+                        this.bot.opponentPV = move;
                         this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
                     }
                     this.makeMove(this.state.moves.length);
