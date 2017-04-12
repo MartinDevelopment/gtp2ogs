@@ -224,16 +224,23 @@ class Bot {
         this.game = game;
 
         let leelaargs = cmd.slice(1);
-        if (game.state.players.black.id == 192100 || game.state.players.white.id == 192100) {
+
+        if (game.state.time_control.speed == "correspondence") {
+            leelaargs.push("--noponder");
+        }
+
+        if (game.state.time_control.speed == "correspondence") {
+            leelaargs.push("--threads=1");
+            leelaargs.push("--playouts=100000");
+        } else if (game.state.players.black.id == 192100 || game.state.players.white.id == 192100) {
             // Korean Zombie, live solo play generally
             leelaargs.push("--threads=4");
         } else if (game.state.players.black.id == 472 || game.state.players.white.id == 472) {
             // Ten
             leelaargs.push("--threads=16");
         } else if (game.state.players.black.id == 172599 || game.state.players.white.id == 172599) {
-            // Haylee correspondence? Plenty of time to think so 2 threads but cap playouts
-            leelaargs.push("--threads=1");
-            leelaargs.push("--playouts=150000");
+            // Haylee
+            leelaargs.push("--threads=16");
         } else if (game.state.players.black.id == 177479 || game.state.players.white.id == 177479) {
             // guoming.huang, heavy blitz player
             leelaargs.push("--threads=4");
@@ -241,15 +248,15 @@ class Bot {
             // xhu98, normallly Friday night streams
             leelaargs.push("--threads=4");
         } else if (game.state.ranked) {
-            // Make sure correspondence doesn't run for 20 hours...
-            leelaargs.push("--playouts=100000");
+            // Make sure large clocks don't run for ages...
+            //leelaargs.push("--playouts=100000");
             leelaargs.push("--threads=4");
         } else {
-            // Make sure correspondence doesn't run for 20 hours...
+            // Make sure large clocks don't run for ages...
             leelaargs.push("--playouts=75000");
             leelaargs.push("--threads=2");
         }
-        leelaargs.push("--logfile=" + this.game.game_id + ".log");
+        leelaargs.push("--logfile=logs/" + this.game.game_id + ".log");
         this.proc = spawn(cmd[0], leelaargs);
         this.commands_sent = 0;
         this.command_callbacks = [];
