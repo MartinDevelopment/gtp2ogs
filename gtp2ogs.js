@@ -2,6 +2,12 @@
 
 'use strict';
 
+process.on('uncaughtException', function (er) {
+  console.trace("ERROR: Uncaught exception");
+  console.error("ERROR: " + er.stack);
+  conn.connection_reset();
+})
+
 process.title = 'gtp2ogs';
 let DEBUG = false;
 let PERSIST = false;
@@ -235,6 +241,9 @@ class Bot {
         } else if (game.state.players.black.id == 192100 || game.state.players.white.id == 192100) {
             // Korean Zombie, live solo play generally
             leelaargs.push("--threads=4");
+        } else if (game.state.players.black.id == 342899 || game.state.players.white.id == 342899) {
+            // 9*9 Professional
+            leelaargs.push("--threads=8");
         } else if (game.state.players.black.id == 472 || game.state.players.white.id == 472) {
             // Ten
             leelaargs.push("--threads=16");
@@ -270,6 +279,15 @@ class Bot {
             //this.log("Starting ", cmd.join(' '));
             this.log("Starting ", leelaargs.join(' '));
         }
+
+        this.proc.on('error', function (err) {
+            this.log("ERROR Process: ", err);
+            this.log("ERROR Will reconnect to this game");
+            this.game.bot = null;
+            let mygameid = this.game.game_id;
+            this.conn.disconnectFromGame(mygameid);
+            this.conn.connectToGame(mygameid);
+        });
 
         let stderr_buffer = "";
         this.proc.stderr.on('data', (data) => {
@@ -698,9 +716,16 @@ class Bot {
                 this.proc.stdin.write(str + "\r\n");
             }
         } catch (e) {
-            this.log("Failed to send command: ", str);
+            this.log("ERROR Failed to send command: ", str);
             this.log(e);
-            if (eb) eb(e);
+            if (eb) {
+                eb(e);
+            } else {
+                this.game.bot = null;
+                let mygameid = this.game.game_id;
+                this.conn.disconnectFromGame(mygameid);
+                this.conn.connectToGame(mygameid);
+            }
         }
     } /* }}} */
     /* influence(cb) {
@@ -1131,7 +1156,7 @@ class Connection {
         socket.on('error', (err) => {
             this.connected = false;
 
-            conn_log("Caught error from Connection socket: " + err);
+            conn_log("ERROR Caught error from Connection socket: " + err.stack);
 
             for (let game_id in this.connected_games) {
                 this.disconnectFromGame(game_id);
@@ -1299,7 +1324,7 @@ class Connection {
         .catch(conn_log);
     }; /* }}} */
     on_challenge(notification) { /* {{{ */
-conn_log(notification);
+        if (DEBUG) conn_log(notification);
         let reject = REJECTNEW;
 
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
@@ -1342,7 +1367,8 @@ conn_log(notification);
                 conn_log(notification.user.username + " wanted absolute time, but total_time shorter than minmaintime");
                 reject = true;
             } else if ( notification.time_control.main_time < argv.minmaintime ) {
-                conn_log(notification.user.username + " wanted main time " + notification.time_control.main_time + ", below minmaintime " + argv.minmaintime);
+                conn_log(notification.user.username + " wanted main time " + notification.time_control.main_time
+                    + ", below minmaintime " + argv.minmaintime);
                 reject = true;
             }
         }
@@ -1355,7 +1381,8 @@ conn_log(notification);
                 conn_log(notification.user.username + " wanted absolute time, but total_time longer than maxmaintime");
                 reject = true;
             } else if ( notification.time_control.main_time > argv.maxmaintime ) {
-                conn_log(notification.user.username + " wanted main time " + notification.time_control.main_time + ", above maxmaintime " + argv.maxmaintime);
+                conn_log(notification.user.username + " wanted main time " + notification.time_control.main_time
+                    + ", above maxmaintime " + argv.maxmaintime);
                 reject = true;
             }
         }
@@ -1364,7 +1391,8 @@ conn_log(notification);
             (      (notification.time_control.period_time && notification.time_control.period_time < argv.minperiodtime)
                 || (notification.time_control.time_increment && notification.time_control.time_increment < argv.minperiodtime)
                 || (notification.time_control.per_move && notification.time_control.per_move < argv.minperiodtime)
-                || (notification.time_control.stones_per_period && (notification.time_control.period_time / notification.time_control.stones_per_period) < argv.minperiodtime)
+                || (notification.time_control.stones_per_period
+                    && (notification.time_control.period_time / notification.time_control.stones_per_period) < argv.minperiodtime)
             ))
         {
             conn_log(notification.user.username + " wanted period too short: " + notification.time_control.period_time);
@@ -1375,7 +1403,8 @@ conn_log(notification);
             (      (notification.time_control.period_time && notification.time_control.period_time > argv.maxperiodtime)
                 || (notification.time_control.time_increment && notification.time_control.time_increment > argv.maxperiodtime)
                 || (notification.time_control.per_move && notification.time_control.per_move > argv.maxperiodtime)
-                || (notification.time_control.stones_per_period && (notification.time_control.period_time / notification.time_control.stones_per_period) > argv.maxperiodtime)
+                || (notification.time_control.stones_per_period
+                    && (notification.time_control.period_time / notification.time_control.stones_per_period) > argv.maxperiodtime)
             ))
         {
             conn_log(notification.user.username + " wanted period too long: " + notification.time_control.period_time);
@@ -1444,7 +1473,7 @@ conn_log(notification);
             reject = true;
         }
 
-if ( notification.handicap < 0 && notification.ranked ) reject = true;
+        if ( notification.handicap < 0 && notification.ranked ) reject = true;
 
         if ( (argv.maxrankedhandicap !== undefined) && notification.ranked && (notification.handicap > argv.maxrankedhandicap) ) {
             conn_log("Max ranked handicap is " + argv.maxrankedhandicap);
