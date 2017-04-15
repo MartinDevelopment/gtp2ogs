@@ -14,10 +14,7 @@ Installation
     ```
   3. Install any missing node.js packages if basic usage below fails, such as:
     ```
-    npm install socket.io-client
-    npm install optimist
-    npm install tracer
-    npm install round10
+    npm install socket.io-client optimist tracer round10
     ```
 
 
