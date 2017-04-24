@@ -267,6 +267,9 @@ class Bot {
         } else if (game.state.players.black.id == 472 || game.state.players.white.id == 472) {
             // Ten
             leelaargs.push("--threads=16");
+        } else if (game.state.players.black.id == 427923 || game.state.players.white.id == 427923) {
+            // KungTingYea, friend of xhu98, 7d
+            leelaargs.push("--threads=16");
         } else if (game.state.players.black.id == 172599 || game.state.players.white.id == 172599) {
             // Haylee
             leelaargs.push("--threads=16");
