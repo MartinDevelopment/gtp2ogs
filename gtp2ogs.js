@@ -379,7 +379,7 @@ class Bot {
                         //   P5 ->  176749 (W: 65.66%) (U: 55.83%) (V: 77.66%:   4924) (N: 71.7%) PV: P5 P2 O2 S5 P3 Q3 S6 R5 Q6 Q2 J4 L6 N6 J6
                         //  Prior version matched for all sizes but no value network information available
                         //let myVARIATIONe = /\s*(.*) ->\s+(\d*) \([UW]: ([^%]*%)\) .* PV: (.*)/;
-                        let myVARIATIONe = /\s*(.*) ->\s+(\d*) \([W]: ([^%]*)%\) \([U]: ([^%]*)%\) \([V]: ([^%]*)%.* PV: (.*)/;
+                        let myVARIATIONe = /\s*(.*) ->\s+(\d*) \([W]:\s+([^%]*)%\) \([U]:\s+([^%]*)%\) \([V]:\s+([^%]*)%.* PV: (.*)/;
                         let myVARIATION = myVARIATIONe.exec(errline);
                         if (myVARIATION)
                         {
