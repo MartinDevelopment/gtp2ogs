@@ -286,7 +286,7 @@ class Bot {
         } else {
             // Make sure large clocks don't run for ages...
             leelaargs.push("--playouts=75000");
-            leelaargs.push("--threads=2");
+            leelaargs.push("--threads=4");
         }
         leelaargs.push("--logfile=logs/" + this.game.game_id + ".log");
         this.proc = spawn(cmd[0], leelaargs);
