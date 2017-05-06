@@ -281,7 +281,6 @@ class Bot {
             leelaargs.push("--threads=4");
         } else if (game.state.ranked) {
             // Make sure large clocks don't run for ages...
-            //leelaargs.push("--playouts=100000");
             leelaargs.push("--threads=4");
         } else {
             // Make sure large clocks don't run for ages...
@@ -304,12 +303,15 @@ class Bot {
         }
 
         this.proc.on('error', function (err) {
-            this.log("ERROR Process: ", err);
-            this.log("ERROR Will reconnect to this game");
-            this.game.bot = null;
-            let mygameid = this.game.game_id;
-            this.conn.disconnectFromGame(mygameid);
-            this.conn.connectToGame(mygameid);
+            conn_log("ERROR Process: ", err);
+            conn_log("ERROR Will reconnect to this game");
+            if (this.game)
+            {
+                this.game.bot = null;
+                let mygameid = this.game.game_id;
+                this.conn.disconnectFromGame(mygameid);
+                this.conn.connectToGame(mygameid);
+            }
         });
 
         let stderr_buffer = "";
