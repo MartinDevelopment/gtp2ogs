@@ -358,8 +358,8 @@ class Bot {
                                     (this.variations[rawmoves[0]].vnwinrate ?
                                         this.variations[rawmoves[0]].winrate + "% (MC " + this.variations[rawmoves[0]].mcwinrate
                                             + "% VN " + this.variations[rawmoves[0]].vnwinrate
-                                            + "%) " + this.variations[rawmoves[0]].nodecount + " playouts"
-                                        : this.variations[rawmoves[0]].winrate + "% " + this.variations[rawmoves[0]].nodecount + " playouts")
+                                            + "%) " + this.variations[rawmoves[0]].nodecount + " visits"
+                                        : this.variations[rawmoves[0]].winrate + "% " + this.variations[rawmoves[0]].nodecount + " visits")
                                     : myPV[2],
                                 "from": this.opponentPV ? this.game.state.moves.length-1 : this.game.state.moves.length,
                                 "marks": mymarks,
