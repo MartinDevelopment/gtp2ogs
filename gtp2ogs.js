@@ -896,6 +896,7 @@ class Game {
             // active_game isn't handling this for us any more. If it is our move, call makeMove.
             //
             if (this.state.phase == "play" && this.state.clock.current_player == this.conn.bot_id) {
+this.log("TEST *** ", argv.corrqueue, this.state.time_control.speed, corr_moves_processing);
                 if (argv.corrqueue && this.state.time_control.speed == "correspondence" && corr_moves_processing > 0) {
                     this.corr_move_pending = true;
                 } else {
@@ -985,7 +986,7 @@ class Game {
                         this.bot.opponentPV = move;
                         this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
                     }
-
+this.log("TEST *** ", argv.corrqueue, this.state.time_control.speed, corr_moves_processing);
                     if (argv.corrqueue && this.state.time_control.speed == "correspondence" && corr_moves_processing > 0) {
                         this.corr_move_pending = true;
                     } else {
@@ -1204,12 +1205,14 @@ class Connection {
             setInterval(() => {
                 // If a game needs a move and we aren't already working on one, make a move
                 //
+conn_log("TEST **** Interval", corr_moves_processing);
                 if (corr_moves_processing == 0) {
                     // Choose a corr game to make a move
                     // TODO: Choose the game with least time remaining
                     //
                     for (let game_id in this.connected_games) {
                         if (this.connected_games[game_id].corr_move_pending) {
+conn_log("TEST **** Interval makeMove", game_id);
                             this.connected_games[game_id].makeMove(this.state.moves.length);
                             break;
                         }
