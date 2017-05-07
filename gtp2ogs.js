@@ -851,6 +851,7 @@ class Game {
         this.bot = null;
         this.my_color = null;
         this.corr_move_pending = false;
+        this.processing = false;
 
         // TODO: Command line options to allow undo?
         //
@@ -1009,6 +1010,7 @@ class Game {
         }
 
         ++moves_processing;
+        this.processing = true;
         if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
             ++corr_moves_processing;
         }
@@ -1024,6 +1026,7 @@ class Game {
                     'move': ".."
                 }));
                 --moves_processing;
+                this.procesing = false;
                 if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
                    this.corr_move_pending = false;
                     --corr_moves_processing;
@@ -1049,6 +1052,7 @@ class Game {
 
         this.bot.genmove(this.state, (move) => {
             --moves_processing;
+            this.processing = false;
             if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
                 this.corr_move_pending = false;
                 --corr_moves_processing;
@@ -1087,6 +1091,12 @@ class Game {
     disconnect() { /* {{{ */
         this.log("Game #", this.game_id, " called disconnect()");
 
+        if (this.processing) {
+            --moves_processing;
+            if (argv.corrqueue && this.state.time_control.speed == "correspondence") {
+                --corr_moves_processing;
+            }
+        }
         this.connected = false;
         this.socket.emit('game/disconnect', this.auth({
             'game_id': this.game_id
