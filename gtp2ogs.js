@@ -982,7 +982,13 @@ class Game {
                         this.bot.opponentPV = move;
                         this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
                     }
-                    this.makeMove(this.state.moves.length);
+
+                    if (argv.corrqueue && this.state.time_control.speed == "correspondence" && corr_moves_processing > 0) {
+                        this.corr_move_pending = true;
+                    } else {
+                        this.makeMove(this.state.moves.length);
+                    }
+                    //this.makeMove(this.state.moves.length);
                 } else {
                     if (DEBUG) this.log("Ignoring our own move", move.move_number);
                 }
