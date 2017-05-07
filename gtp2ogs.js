@@ -257,9 +257,11 @@ class Bot {
             leelaargs.push("--noponder");
         }
 
-        if (game.state.time_control.speed == "correspondence") {
+        if (game.state.time_control.speed == "correspondence" && game.state.ranked) {
             leelaargs.push("--threads=1");
-            leelaargs.push("--playouts=100000");
+        } else if (game.state.time_control.speed == "correspondence") {
+            leelaargs.push("--threads=1");
+            leelaargs.push("--playouts=75000");
         } else if (game.state.players.black.id == 192100 || game.state.players.white.id == 192100) {
             // Korean Zombie, live solo play generally
             leelaargs.push("--threads=4");
