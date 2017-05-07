@@ -259,6 +259,7 @@ class Bot {
 
         if (game.state.time_control.speed == "correspondence" && game.state.ranked) {
             leelaargs.push("--threads=1");
+            leelaargs.push("--playouts=500000");
         } else if (game.state.time_control.speed == "correspondence") {
             leelaargs.push("--threads=1");
             leelaargs.push("--playouts=75000");
@@ -414,6 +415,7 @@ class Bot {
 
                         if (errline.match(/^MC winrate/)) {
                             this.genmovePV = true;
+                            this.opponentPV = false;
                         }
                     }
                 }
