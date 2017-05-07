@@ -1213,7 +1213,7 @@ conn_log("TEST **** Interval", corr_moves_processing);
                     for (let game_id in this.connected_games) {
                         if (this.connected_games[game_id].corr_move_pending) {
 conn_log("TEST **** Interval makeMove", game_id);
-                            this.connected_games[game_id].makeMove(this.state.moves.length);
+                            this.connected_games[game_id].makeMove(this.connected_games[game_id].state.moves.length);
                             break;
                         }
                     }
