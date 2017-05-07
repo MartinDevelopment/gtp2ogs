@@ -1400,6 +1400,9 @@ conn_log("TEST **** Interval makeMove", game_id);
         for (let game_id in this.connected_games) {
             this.disconnectFromGame(game_id);
         }
+        socket.emit('notification/connect', this.auth({}), (x) => {
+            conn_log(x);
+        });
     }; /* }}} */
     on_friendRequest(notification) { /* {{{ */
         console.log("Friend request from ", notification.user.username);
