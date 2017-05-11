@@ -268,7 +268,7 @@ class Bot {
             leelaargs.push("--threads=4");
         } else if (game.state.players.black.id == 342899 || game.state.players.white.id == 342899) {
             // 9*9 Professional
-            leelaargs.push("--threads=8");
+            leelaargs.push("--threads=4");
         } else if (game.state.players.black.id == 472 || game.state.players.white.id == 472) {
             // Ten
             leelaargs.push("--threads=16");
@@ -827,7 +827,8 @@ class Bot {
     } /* }}} */
     kill() { /* {{{ */
         this.log("Killing process ");
-        this.proc.kill();
+        //this.proc.kill();
+        this.command("exit");
         if (this.stderr && this.stderr != "")
         {
             this.error("stderr: " + this.stderr);
@@ -898,7 +899,6 @@ class Game {
             // active_game isn't handling this for us any more. If it is our move, call makeMove.
             //
             if (this.state.phase == "play" && this.state.clock.current_player == this.conn.bot_id) {
-this.log("TEST *** ", argv.corrqueue, this.state.time_control.speed, corr_moves_processing);
                 if (argv.corrqueue && this.state.time_control.speed == "correspondence" && corr_moves_processing > 0) {
                     this.corr_move_pending = true;
                 } else {
@@ -988,7 +988,6 @@ this.log("TEST *** ", argv.corrqueue, this.state.time_control.speed, corr_moves_
                         this.bot.opponentPV = move;
                         this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
                     }
-this.log("TEST *** ", argv.corrqueue, this.state.time_control.speed, corr_moves_processing);
                     if (argv.corrqueue && this.state.time_control.speed == "correspondence" && corr_moves_processing > 0) {
                         this.corr_move_pending = true;
                     } else {
@@ -1207,14 +1206,12 @@ class Connection {
             setInterval(() => {
                 // If a game needs a move and we aren't already working on one, make a move
                 //
-conn_log("TEST **** Interval", corr_moves_processing);
                 if (corr_moves_processing == 0) {
                     // Choose a corr game to make a move
                     // TODO: Choose the game with least time remaining
                     //
                     for (let game_id in this.connected_games) {
                         if (this.connected_games[game_id].corr_move_pending) {
-conn_log("TEST **** Interval makeMove", game_id);
                             this.connected_games[game_id].makeMove(this.connected_games[game_id].state.moves.length);
                             break;
                         }
