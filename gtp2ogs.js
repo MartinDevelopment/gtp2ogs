@@ -373,7 +373,7 @@ class Bot {
                                 "moves": moves
                             }
                             if ((this.genmovePV || this.opponentPV) && moves) {
-                                this.game.sendChat(body, this.opponentPV ? this.game.state.moves.length : this.game.state.moves.length+1, "malkovich");
+                                if (this.game.game_id != 8661604) this.game.sendChat(body, this.opponentPV ? this.game.state.moves.length : this.game.state.moves.length+1, "malkovich");
                                 /* this.influence( (influence) => {
                                     this.log("Callback influence: " + JSON.stringify(influence, null, 4));
                                 }); */
@@ -826,9 +826,11 @@ class Bot {
         )
     } /* }}} */
     kill() { /* {{{ */
-        this.log("Killing process ");
-        //this.proc.kill();
         this.command("exit");
+        this.log("Killing process ");
+        this.proc.stdout.pause();
+        this.proc.stderr.pause();
+        //this.proc.kill();
         if (this.stderr && this.stderr != "")
         {
             this.error("stderr: " + this.stderr);
