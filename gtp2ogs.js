@@ -8,7 +8,7 @@ process.on('uncaughtException', function (er) {
   if (!conn || !conn.socket) {
     conn = new Connection();
   } else {
-    conn.connection_reset();
+    //conn.connection_reset();
   }
 })
 
@@ -832,13 +832,13 @@ class Bot {
     kill() { /* {{{ */
         this.command("exit");
         this.log("Killing process ");
-        this.proc.stdout.pause();
-        this.proc.stderr.pause();
-        //this.proc.kill();
         if (this.stderr && this.stderr != "")
         {
             this.error("stderr: " + this.stderr);
         }
+        this.proc.stdout.pause();
+        this.proc.stderr.pause();
+        this.proc.kill();
     } /* }}} */
     sendMove(move, width, color){
         if (DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width));
