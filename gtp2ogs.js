@@ -257,7 +257,7 @@ class Bot {
 
         let leelaargs = cmd.slice(1);
 
-        if (game.state.time_control.speed == "correspondence") {
+        if (game.state.time_control.speed == "correspondence" || !game.state.ranked) {
             leelaargs.push("--noponder");
         }
 
