@@ -305,6 +305,7 @@ class Bot {
         this.variations = {};
         this.genmovePV = false;
         this.opponentPV = false;
+        this.exiting = false;
 
         if (DEBUG) {
             //this.log("Starting ", cmd.join(' '));
@@ -325,6 +326,8 @@ class Bot {
 
         let stderr_buffer = "";
         this.proc.stderr.on('data', (data) => {
+            if (this.exiting) return;
+
             stderr_buffer += data.toString();
 
             if (stderr_buffer[stderr_buffer.length-1] != '\n') {
@@ -428,6 +431,8 @@ class Bot {
 
         let stdout_buffer = "";
         this.proc.stdout.on('data', (data) => {
+            if (this.exiting) return;
+
             stdout_buffer += data.toString();
 
             if (argv.json) {
@@ -830,15 +835,16 @@ class Bot {
         )
     } /* }}} */
     kill() { /* {{{ */
+        this.exiting = true;
         this.command("exit");
         this.log("Killing process ");
+        this.proc.stdout.pause();
+        this.proc.stderr.pause();
         if (this.stderr && this.stderr != "")
         {
             this.error("stderr: " + this.stderr);
         }
-        this.proc.stdout.pause();
-        this.proc.stderr.pause();
-        this.proc.kill();
+        //this.proc.kill();
     } /* }}} */
     sendMove(move, width, color){
         if (DEBUG) this.log("Calling sendMove with", move2gtpvertex(move, width));
