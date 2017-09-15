@@ -1487,7 +1487,7 @@ class Connection {
         }
 
         if ( argv.minmaintime ) {
-            if ( ["simple","none"].indexOf(notification.time_control.time_control) < 0 ) {
+            if ( ["simple","none"].indexOf(notification.time_control.time_control) >= 0 ) {
                 conn_log("Minimum main time not supported in time control: " + notification.time_control.time_control);
                 reject = true;
             } else if ( notification.time_control.time_control == "absolute" && notification.time_control.total_time < argv.minmaintime ) {
@@ -1501,7 +1501,7 @@ class Connection {
         }
 
         if ( argv.maxmaintime ) {
-            if ( ["simple","none"].indexOf(notification.time_control.time_control) < 0 ) {
+            if ( ["simple","none"].indexOf(notification.time_control.time_control) >= 0 ) {
                 conn_log("Maximum main time not supported in time control: " + notification.time_control.time_control);
                 reject = true;
             } else if ( notification.time_control.time_control == "absolute" && notification.time_control.total_time > argv.maxmaintime ) {
