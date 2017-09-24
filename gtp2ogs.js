@@ -5,8 +5,10 @@
 process.on('uncaughtException', function (er) {
   console.trace("ERROR: Uncaught exception");
   console.error("ERROR: " + er.stack);
+  corr_moves_processing = 0;
   if (!conn || !conn.socket) {
     conn = new Connection();
+    console.error("ERROR: Calling new Connection()");
   } else {
     //conn.connection_reset();
   }
@@ -292,7 +294,6 @@ class Bot {
             // xhu98, normallly Friday night streams
             leelaargs.push("--threads=4");
         } else if (game.state.ranked) {
-            // Make sure large clocks don't run for ages...
             leelaargs.push("--threads=4");
         } else {
             // Make sure large clocks don't run for ages...
