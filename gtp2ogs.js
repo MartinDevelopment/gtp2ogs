@@ -286,9 +286,12 @@ class Bot {
         } else if (game.state.players.black.id == 192100 || game.state.players.white.id == 192100) {
             // Korean Zombie, live solo play generally
             leelaargs.push("--threads=4");
+        } else if (game.state.players.black.id == 486580 || game.state.players.white.id == 486580) {
+            // hammer123
+            leelaargs.push("--threads=8");
         } else if (game.state.players.black.id == 342899 || game.state.players.white.id == 342899) {
             // 9*9 Professional
-            leelaargs.push("--threads=4");
+            leelaargs.push("--threads=6");
         } else if (game.state.players.black.id == 434880 || game.state.players.white.id == 434880) {
             // pandora12
             leelaargs.push("--threads=8");
