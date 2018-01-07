@@ -20,6 +20,8 @@ let PERSIST = false;
 let KGSTIME = false;
 let NOCLOCK = false;
 let REJECTNEW = false;
+let GREETING = "";
+let FAREWELL = "";
 
 let round10 = require('round10').round10;
 let spawn = require('child_process').spawn;
@@ -100,6 +102,10 @@ let optimist = require("optimist")
     .string('minrank')
     .describe('maxrank', 'Maximum opponent rank to accept (ex: 1d)')
     .string('maxrank')
+    .describe('greeting', 'Greeting message to appear in chat at first move (ex: "Hello, have a nice game")')
+    .string('greeting')
+    .describe('farewell', 'Thank you message to appear in chat at end of game (ex: "Thank you for playing")')
+    .string('farewell')
     .describe('proonly', 'Only accept matches from professionals')
     .describe('rankedonly', 'Only accept ranked matches')
     .describe('unrankedonly', 'Only accept unranked matches')
@@ -242,6 +248,14 @@ if (argv.maxrank) {
         process.exit();
     }
 }
+
+if (argv.greeting) {
+    GREETING = argv.greeting;
+}
+if (argv.farewell) {
+    FAREWELL = argv.farewell;
+}
+
 
 let bot_command = argv._;
 let moves_processing = 0;
@@ -878,6 +892,7 @@ class Game {
         this.socket = conn.socket;
         this.state = null;
         this.opponent_evenodd = null;
+        this.greeted = false;
         this.connected = true;
         this.bot = null;
         this.my_color = null;
@@ -1125,8 +1140,12 @@ class Game {
                 //    if (this.bot && score) this.bot.SCORE = score.score;
                 //});
                 //this.sendChat("Test chat message, my move #" + move_number + " is: " + move.text, move_number, "malkovich");
+        if( argv.greeting && !this.greeted && this.state.moves.length < (2 + this.state.handicap) ){
+                  this.sendChat( GREETING, "discussion");
+                  this.greeted = true;
+        }
             }
-            if (!PERSIST) {
+            if (!PERSIST && this.bot != null ) {
                 this.bot.kill();
                 this.bot = null;
             }
@@ -1136,7 +1155,10 @@ class Game {
         return this.conn.auth(obj);
     }; /* }}} */
     disconnect() { /* {{{ */
-        this.log("Game #", this.game_id, " called disconnect()");
+        this.log("Disconnecting from game #", this.game_id);
+        if( argv.farewell && this.state.game_id != null ){
+            this.sendChat(FAREWELL, "discussion");
+        }
 
         if (this.processing) {
             this.processing = false;
