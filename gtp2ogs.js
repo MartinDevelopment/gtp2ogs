@@ -1145,7 +1145,7 @@ class Game {
                   this.greeted = true;
         }
             }
-            if (!PERSIST && this.bot != null ) {
+            if (!PERSIST && this.bot != null) {
                 this.bot.kill();
                 this.bot = null;
             }
@@ -1156,7 +1156,8 @@ class Game {
     }; /* }}} */
     disconnect() { /* {{{ */
         this.log("Disconnecting from game #", this.game_id);
-        if( argv.farewell && this.state.game_id != null ){
+
+        if (argv.farewell && this.state.game_id != null) {
             this.sendChat(FAREWELL, "discussion");
         }
 
