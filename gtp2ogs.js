@@ -383,8 +383,8 @@ class Bot {
                         {
                             let mymarks = {};
                             for (let i=0; i < rawmoves.length; i++) {
-                                let x = num2char(gtpchar2num(rawmoves[i].slice(0,1).toLowerCase()));
-                                let y = num2char(this.game.state.width - rawmoves[i].slice(1));
+                                let x = (rawmoves[i].toLowerCase() == "pass") ? "." : num2char(gtpchar2num(rawmoves[i].slice(0,1).toLowerCase()));
+                                let y = (rawmoves[i].toLowerCase() == "pass") ? "." : num2char(this.game.state.width - rawmoves[i].slice(1));
                                 moves += x + y;
                                 if (i==0) {
                                     if (this.genmovePV) {
