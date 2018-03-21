@@ -1171,6 +1171,11 @@ class Game {
                 --corr_moves_processing;
             }
         }
+
+        if (argv.farewell && this.state != null && this.state.game_id != null) {
+            this.sendChat(FAREWELL, "discussion");
+        }
+
         this.connected = false;
         this.socket.emit('game/disconnect', this.auth({
             'game_id': this.game_id
