@@ -1160,7 +1160,7 @@ class Game {
     disconnect() { /* {{{ */
         this.log("Disconnecting from game #", this.game_id);
 
-        if (argv.farewell && this.state.game_id != null) {
+        if (argv.farewell && this.state != null && this.state.game_id != null) {
             this.sendChat(FAREWELL, "discussion");
         }
 
@@ -1459,6 +1459,7 @@ class Connection {
             }
         }
 
+        // TODO Following 2 lines seem duplicate of above? Safe to remove?
         delete this.connected_games[game_id];
         if (argv.timeout) delete this.connected_game_timeouts[game_id];
     }; /* }}} */
@@ -1657,13 +1658,19 @@ class Connection {
             .then(ignore)
             .catch((err) => {
                 conn_log("Error accepting challenge, declining it");
-                del(api1('me/challenges/' + notification.challenge_id), this.auth({ }))
+                post(api1('me/challenges/' + notification.challenge_id), this.auth({ 
+                    'delete': true,
+                    'message': 'Error accepting game challenge, challenge has been removed.',
+                }))
                 .then(ignore)
                 .catch(conn_log)
                 this.deleteNotification(notification);
             })
         } else {
-            del(api1('me/challenges/' + notification.challenge_id), this.auth({ }))
+            post(api1('me/challenges/' + notification.challenge_id), this.auth({
+                'delete': true,
+                'message': "The AI you've challenged has rejected this game.",
+            }))
             .then(ignore)
             .catch(conn_log)
         }
