@@ -19,13 +19,13 @@ let DEBUG = false;
 let PERSIST = false;
 let KGSTIME = false;
 let NOCLOCK = false;
-let REJECTNEW = false;
 let GREETING = "";
 let FAREWELL = "";
 
 let round10 = require('round10').round10;
 let spawn = require('child_process').spawn;
 let os = require('os')
+let fs = require('fs')
 let io = require('socket.io-client');
 let querystring = require('querystring');
 let http = require('http');
@@ -75,6 +75,7 @@ let optimist = require("optimist")
     .describe('startupbuffer', 'Subtract this many seconds from time available on first move')
     .default('startupbuffer', 5)
     .describe('rejectnew', 'Reject all new challenges')
+    .describe('rejectnewfile', 'Reject new challenges if file exists (checked each time, can use for load-balancing)')
     .describe('boardsize', 'Board size(s) to accept')
     .string('boardsize')
     .default('boardsize', '9,13,19')
@@ -115,6 +116,7 @@ let optimist = require("optimist")
     .describe('nopause', 'Do not allow games to be paused')
     .describe('nopauseranked', 'Do not allow ranked games to be paused')
     .describe('nopauseunranked', 'Do not allow unranked games to be paused')
+    .describe('hidden', 'Don\'t list the bot in the public challenge list')
 ;
 let argv = optimist.argv;
 
@@ -154,8 +156,11 @@ if (argv.noclock) {
     NOCLOCK = true;
 }
 
-if (argv.rejectnew) {
-    REJECTNEW = true;
+function check_rejectnew()
+{
+    if (argv.rejectnew)  return true;
+    if (argv.rejectnewfile && fs.existsSync(argv.rejectnewfile))  return true;
+    return false;
 }
 
 let allowed_sizes = [];
@@ -1270,8 +1275,8 @@ class Connection {
                 socket.emit('notification/connect', this.auth({}), (x) => {
                     conn_log(x);
                 })
-                socket.emit('bot/connect', this.auth({ }), () => {
-                })
+                socket.emit('bot/connect', this.auth({ }));
+                socket.emit('bot/hidden', !!argv.hidden);
             });
         });
 
@@ -1489,11 +1494,11 @@ class Connection {
     }; /* }}} */
     on_challenge(notification) { /* {{{ */
         if (DEBUG) conn_log(notification);
-        let reject = REJECTNEW;
+        let reject = check_rejectnew();
 
         let rejectmsg = "";
 
-        if (REJECTNEW) rejectmsg = "Not accepting new games at this time. ";
+        if (reject) rejectmsg = "Not accepting new games at this time. ";
 
         if (["japanese", "aga", "chinese", "korean"].indexOf(notification.rules) < 0) {
             rejectmsg += "Unhandled rules: " + notification.rules + ". ";
