@@ -805,7 +805,7 @@ class Bot {
         }
     } /* }}} */
     /* influence(cb) {
-        this.command("influence", 
+        this.command("influence",
             (influence) => {
                 this.log("call function got:" + JSON.stringify(influence, null, 4));
                 cb({'width': 9, 'height': 9, 'map': influence});
