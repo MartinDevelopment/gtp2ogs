@@ -341,7 +341,7 @@ class Bot {
         this.variations = {};
         this.genmovePV = false;
         this.opponentPV = false;
-        this.exiting = false;
+        this.ignore = false;
 
         if (DEBUG) {
             //this.log("Starting ", cmd.join(' '));
@@ -362,7 +362,7 @@ class Bot {
 
         let stderr_buffer = "";
         this.proc.stderr.on('data', (data) => {
-            if (this.exiting) return;
+            if (this.ignore) return;
 
             stderr_buffer += data.toString();
 
@@ -467,7 +467,7 @@ class Bot {
 
         let stdout_buffer = "";
         this.proc.stdout.on('data', (data) => {
-            if (this.exiting) return;
+            if (this.ignore) return;
 
             stdout_buffer += data.toString();
 
@@ -762,7 +762,7 @@ class Bot {
             if (! move.edited) {
                 if (state.free_handicap_placement && handicaps_left > 1) {
                     handicaps_left-=1
-                } 
+                }
                 else {
                     color = color == 'black' ? 'white' : 'black';
                 }
@@ -792,7 +792,7 @@ class Bot {
                 this.proc.stdin.write(str + "\r\n");
             }
         } catch (e) {
-            this.log("ERROR Failed to send command: ", str);
+            this.log("Failed to send command: ", str);
             this.log(e);
             if (eb) {
                 eb(e);
@@ -871,7 +871,7 @@ class Bot {
         )
     } /* }}} */
     kill() { /* {{{ */
-        this.exiting = true;
+        this.ignore = true;
         this.command("exit");
         this.log("Killing process ");
         this.proc.stdout.pause();
