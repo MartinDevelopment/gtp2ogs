@@ -2,18 +2,6 @@
 
 'use strict';
 
-process.on('uncaughtException', function (er) {
-  console.trace("ERROR: Uncaught exception");
-  console.error("ERROR: " + er.stack);
-  corr_moves_processing = 0;
-  if (!conn || !conn.socket) {
-    conn = new Connection();
-    console.error("ERROR: Calling new Connection()");
-  } else {
-    //conn.connection_reset();
-  }
-})
-
 process.title = 'gtp2ogs';
 let DEBUG = false;
 let PERSIST = false;
@@ -46,6 +34,18 @@ let console = require('tracer').colorConsole({
         data.space = " ".repeat(Math.max(0, 30 - `${data.file}:${data.line}`.length));
     }
 });
+
+process.on('uncaughtException', function (er) {
+  console.trace("ERROR: Uncaught exception");
+  console.error("ERROR: " + er.stack);
+  corr_moves_processing = 0;
+  if (!conn || !conn.socket) {
+    conn = new Connection();
+    console.error("ERROR: Calling new Connection()");
+  } else {
+    //conn.connection_reset();
+  }
+})
 
 let optimist = require("optimist")
     .usage("Usage: $0 --username <bot-username> --apikey <apikey> [arguments] -- botcommand [bot arguments]")
