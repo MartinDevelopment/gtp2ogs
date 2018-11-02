@@ -1034,7 +1034,6 @@ class Game {
                 } else {
                     if (this.bot) {
                         this.bot.opponentPV = move;
-                        this.bot.sendMove(decodeMoves(move.move, this.state.width)[0], this.state.width, this.my_color == "black" ? "white" : "black");
                     }                    
                     if (DEBUG) this.log("Ignoring our own move", move.move_number);
                 }
