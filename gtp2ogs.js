@@ -284,52 +284,23 @@ class Bot {
 
         if (game.state.time_control.speed == "correspondence" && game.state.ranked) {
             leelaargs.push("--threads=1");
-            leelaargs.push("--playouts=500000");
+            leelaargs.push("--playouts=100");
         } else if (game.state.time_control.speed == "correspondence") {
             leelaargs.push("--threads=1");
-            leelaargs.push("--playouts=100000");
-        } else if (game.state.players.black.id == 192100 || game.state.players.white.id == 192100) {
-            // Korean Zombie, live solo play generally
-            leelaargs.push("--threads=4");
-        } else if (game.state.players.black.id == 486580 || game.state.players.white.id == 486580) {
-            // hammer123
-            leelaargs.push("--threads=8");
-        } else if (game.state.players.black.id == 342899 || game.state.players.white.id == 342899) {
-            // 9*9 Professional
-            leelaargs.push("--threads=6");
-        } else if (game.state.players.black.id == 434880 || game.state.players.white.id == 434880) {
-            // pandora12
-            leelaargs.push("--threads=8");
-        } else if (game.state.players.black.id == 472 || game.state.players.white.id == 472) {
-            // Ten
-            leelaargs.push("--threads=16");
-        } else if (game.state.players.black.id == 427923 || game.state.players.white.id == 427923) {
-            // KungTingYea, friend of xhu98, 7d
-            leelaargs.push("--threads=16");
-        } else if (game.state.players.black.id == 172599 || game.state.players.white.id == 172599) {
-            // Haylee
-            leelaargs.push("--threads=16");
-        } else if (game.state.players.black.id == 433376 || game.state.players.white.id == 433376) {
-            // Zen Lee bot, by request
-            leelaargs.push("--threads=12");
-        } else if (game.state.players.black.id == 177479 || game.state.players.white.id == 177479) {
-            // guoming.huang, heavy blitz player
-            leelaargs.push("--threads=4");
-        } else if (game.state.players.black.id == 69627 || game.state.players.white.id == 69627) {
-            // xhu98, normallly Friday night streams
-            leelaargs.push("--threads=4");
+            leelaargs.push("--playouts=100");
         } else if (game.state.ranked) {
             leelaargs.push("--threads=4");
+            leelaargs.push("--playouts=100");
         } else {
             // Make sure large clocks don't run for ages...
-            leelaargs.push("--playouts=75000");
+            leelaargs.push("--playouts=100");
             leelaargs.push("--threads=4");
         }
-        leelaargs.push("--logfile=logs/" + this.game.game_id + ".log");
+        leelaargs.push("--logfile=" + this.game.game_id + ".log");
 
         if (game.state.time_control.speed == "correspondence" && !game.state.ranked)
         {
-            this.proc = spawn("/usr/bin/leela_gtp", leelaargs);
+            this.proc = spawn("./leela-zero/src/leelaz", leelaargs);
         } else {
             this.proc = spawn(cmd[0], leelaargs);
         }
