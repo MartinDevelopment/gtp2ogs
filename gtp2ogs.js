@@ -312,7 +312,7 @@ class Bot {
         this.variations = {};
         this.genmovePV = true;
         this.opponentPV = false;
-        this.ignore = false;
+        this.ignore = true;
 
         if (DEBUG) {
             //this.log("Starting ", cmd.join(' '));
