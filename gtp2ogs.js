@@ -283,18 +283,18 @@ class Bot {
         }
 
         if (game.state.time_control.speed == "correspondence" && game.state.ranked) {
-            leelaargs.push("--threads=1");
-            leelaargs.push("--playouts=100");
+            leelaargs.push("--threads=10");
+            leelaargs.push("--playouts=1600");
         } else if (game.state.time_control.speed == "correspondence") {
-            leelaargs.push("--threads=1");
-            leelaargs.push("--playouts=100");
+            leelaargs.push("--threads=10");
+            leelaargs.push("--playouts=1600");
         } else if (game.state.ranked) {
-            leelaargs.push("--threads=4");
-            leelaargs.push("--playouts=100");
+            leelaargs.push("--threads=10");
+            leelaargs.push("--playouts=1600");
         } else {
             // Make sure large clocks don't run for ages...
-            leelaargs.push("--playouts=100");
-            leelaargs.push("--threads=4");
+            leelaargs.push("--playouts=1600");
+            leelaargs.push("--threads=10");
         }
         leelaargs.push("--logfile=" + this.game.game_id + ".log");
 
@@ -394,8 +394,8 @@ class Bot {
                             }
                         }
                         this.variations = {};
-                        this.genmovePV = false;
-                        this.opponentPV = false;
+                        this.genmovePV = true;
+                        this.opponentPV = true;
                     } else {
                         //   P5 ->  176749 (W: 65.66%) (U: 55.83%) (V: 77.66%:   4924) (N: 71.7%) PV: P5 P2 O2 S5 P3 Q3 S6 R5 Q6 Q2 J4 L6 N6 J6
                         //  Prior version matched for all sizes but no value network information available
@@ -429,7 +429,7 @@ class Bot {
 
                         if (errline.match(/^MC winrate/)) {
                             this.genmovePV = true;
-                            this.opponentPV = false;
+                            this.opponentPV = true;
                         }
                     }
                 }
