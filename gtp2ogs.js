@@ -310,7 +310,7 @@ class Bot {
         this.SCORE = "";
         this.firstmove = true;
         this.variations = {};
-        this.genmovePV = false;
+        this.genmovePV = true;
         this.opponentPV = false;
         this.ignore = false;
 
