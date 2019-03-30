@@ -311,7 +311,7 @@ class Bot {
         this.firstmove = true;
         this.variations = {};
         this.genmovePV = true;
-        this.opponentPV = false;
+        this.opponentPV = true;
         this.ignore = false;
 
         if (DEBUG) {
